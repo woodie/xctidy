@@ -5,7 +5,7 @@ import Foundation
 
 // MARK: - Fixtures
 
-// Real chains pulled from next-caltrain-swift's Tests/*.swift, used to prove
+// Real chains pulled from next-caltrain-swift's .swift files under Tests/, used to prove
 // both known comma-disambiguation edge cases: a parenthetical aside, and a
 // bare prose comma with no parens at all.
 private let goodTimesSwift = """

@@ -1,6 +1,7 @@
 # xctidy
 
 [![Swift](https://img.shields.io/badge/swift-5.7%2B-F05138.svg)](Package.swift)
+[![CI](https://github.com/woodie/xctidy/actions/workflows/makefile.yml/badge.svg)](https://github.com/woodie/xctidy/actions/workflows/makefile.yml)
 [![License](https://img.shields.io/github/license/woodie/xctidy.svg)](LICENSE)
 
 <!-- CI and release badges land here once a GitHub Actions workflow and a tagged release exist. -->

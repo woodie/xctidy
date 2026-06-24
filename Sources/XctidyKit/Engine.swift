@@ -13,7 +13,7 @@ import Foundation
 /// comma -- some commas are nesting separators, some are just commas in the
 /// prose. This engine disambiguates by cross-referencing the literal
 /// `describe(...)`/`context(...)`/`it(...)` strings found in the project's
-/// `Tests/*.swift` files (see `loadKnownAtoms`), falling back to a
+/// `.swift` files under `Tests/` (see `loadKnownAtoms`), falling back to a
 /// paren-depth-aware heuristic split when that dictionary can't resolve the
 /// name uniquely.
 

@@ -2,6 +2,5 @@
 .swiftpm/
 *.xcodeproj
 .DS_Store
-xctidy
 *.o
 *.swiftmodule
