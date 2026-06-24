@@ -7,44 +7,10 @@
 
 ![Example Screenshot](docs/example.png)
 
-**xctidy brings RSpec's documentation format and Mocha's spec output format
-to `xcodebuild`.**
 
-## Why xctidy instead of xcbeautify or xcpretty?
+**`xctidy` adds nested describe/context/it tree support to xcodebuild.**
 
-xcbeautify and xcpretty are general-purpose `xcodebuild` beautifiers: they
-format build output as well as test output, run on Linux, emit JUnit
-reports, and integrate with CI UIs (GitHub Actions, TeamCity, Azure DevOps).
-`xctidy` does none of that. It does one thing they don't: turn a
-Quick/Nimble test's comma-flattened XCTest name back into a real nested
-tree, and fold a failure's reason and `file:line` into its own section by
-reading `xcodebuild`'s raw `error:` line directly -- something no
-post-processor can do once another formatter has already reshuffled that
-text (see [docs/HOW_IT_WORKS.md](docs/HOW_IT_WORKS.md#failure-folding)).
-
-**Reach for `xctidy` when:**
-
-- your tests are Quick/Nimble `describe`/`context`/`it` specs (not Swift
-  Testing's `@Test`/`@Suite`, not plain `XCTestCase`)
-- you want RSpec- or Mocha-style nested, indented test output instead of one
-  flat list of comma-joined names
-- you want failures pulled out of the tree into their own section, with
-  `file:line` preserved
-
-**Keep xcbeautify/xcpretty (or run them alongside `xctidy`) when:**
-
-- you need build-phase output formatted rather than suppressed --
-  `xctidy` throws away everything that isn't a test result
-- you're on Linux, need JUnit XML, or want the GitHub Actions/TeamCity/Azure
-  DevOps renderers -- `xctidy` has none of that
-- your tests aren't Quick/Nimble -- there's no comma-flattening problem to
-  solve, so `xctidy` adds nothing over what you already have
-
-Both read the same raw `xcodebuild` protocol, so they slot into the same
-pipeline position. If you want xcbeautify's build-phase formatting *and*
-`xctidy`'s test tree, run `xcodebuild build` through xcbeautify and
-`xcodebuild test` through `xctidy` separately -- don't chain them on the
-same invocation.
+An alternative to xcbeautify and xcpretty written in Swift.
 
 ## Features
 
@@ -109,7 +75,7 @@ you've probably already seen:
 
 | Flag | Short form | Convention | Look |
 |---|---|---|---|
-| `--classic` (default) | -- | this project's own original Python formatter | glyph + `name (N seconds)`, failures add `(FAILED - N)` |
+|   |   | Our base formatter | glyph + `name (N seconds)`, failures add `(FAILED - N)` |
 | `--fd` | `-fd` | RSpec's `-fd`/documentation formatter | plain colored name, yellow `(PENDING)` for skips |
 | `--spec` | `-fs` | Mocha's default `spec` reporter / Jest | green `✔` + gray name, red `✗ name (FAILED - N)` |
 
