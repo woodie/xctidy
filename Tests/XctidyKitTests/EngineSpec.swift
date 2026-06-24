@@ -1,135 +1,13 @@
 import Quick
 import Nimble
-import Foundation
 @testable import XctidyKit
 
-// MARK: - Fixtures
-
-// Real chains pulled from next-caltrain-swift's .swift files under Tests/, used to prove
-// both known comma-disambiguation edge cases: a parenthetical aside, and a
-// bare prose comma with no parens at all.
-private let goodTimesSwift = """
-    describe("GoodTimes") {
-        context("when 'today' is fixed via debugOverrideDotw") {
-            context("and today is Saturday (6)") {
-                it("computes tomorrow as Sunday (0), wrapping the week") {}
-            }
-        }
-    }
-    """
-
-private let caltrainServiceSwift = """
-    describe("CaltrainService") {
-        describe("#routes(from:to:scheduleType:)") {
-            context("for a direct diesel trip (Morgan Hill to Gilroy)") {
-                it("is not a transfer, since both endpoints are South County") {}
-            }
-            context("for a direct electric trip (San Francisco to San Jose Diridon)") {
-                it("is not a transfer") {}
-            }
-        }
-        describe("#nextIndex(trips:minutes:)") {
-            context("when given an empty trip list") {
-                it("returns nil") {}
-            }
-        }
-    }
-    """
-
-private func writeTempSpecsDir(_ files: [String: String]) -> String {
-    let dir = FileManager.default.temporaryDirectory
-        .appendingPathComponent("xctidy-tests-\(UUID().uuidString)")
-    try! FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-    for (name, contents) in files {
-        let url = dir.appendingPathComponent(name)
-        try! contents.write(to: url, atomically: true, encoding: .utf8)
-    }
-    return dir.path
-}
-
+/// One QuickSpec class per file, one top-level `describe` per file, matching
+/// the file's subject (here, the `Engine` class itself). See
+/// docs/DEVELOPMENT.md's "Test" section and the README's "Writing specs"
+/// section for why.
 final class EngineSpec: QuickSpec {
     override static func spec() {
-
-        describe("loadKnownAtoms") {
-            it("scans describe/context/it literals out of the given directory") {
-                let dir = writeTempSpecsDir([
-                    "GoodTimesSpec.swift": goodTimesSwift,
-                    "CaltrainServiceSpec.swift": caltrainServiceSwift,
-                ])
-                let atoms = loadKnownAtoms(specsDir: dir)
-
-                expect(atoms).to(contain("GoodTimes"))
-                expect(atoms).to(contain("and today is Saturday (6)"))
-                expect(atoms).to(contain("computes tomorrow as Sunday (0), wrapping the week"))
-                expect(atoms).to(contain("is not a transfer, since both endpoints are South County"))
-                expect(atoms).to(contain("is not a transfer"))
-            }
-
-            it("unescapes quoted/tab literals") {
-                let dir = writeTempSpecsDir([
-                    "Quoted.swift": #"it("handles \"quoted\" text and a\ttab") {}"#
-                ])
-                let atoms = loadKnownAtoms(specsDir: dir)
-                expect(atoms).to(contain("handles \"quoted\" text and a\ttab"))
-            }
-
-            it("returns an empty set for a missing directory") {
-                let atoms = loadKnownAtoms(specsDir: "/nonexistent/path/for/xctidy-tests")
-                expect(atoms).to(beEmpty())
-            }
-        }
-
-        describe("splitPath") {
-            context("disambiguation against known atoms") {
-                it("resolves a bare prose comma as a single leaf") {
-                    let atoms: Set<String> = [
-                        "CaltrainService",
-                        "#routes(from:to:scheduleType:)",
-                        "for a direct diesel trip (Morgan Hill to Gilroy)",
-                        "is not a transfer, since both endpoints are South County",
-                    ]
-                    let name =
-                        "CaltrainService, #routes(from:to:scheduleType:), for a direct diesel trip (Morgan Hill to Gilroy), is not a transfer, since both endpoints are South County"
-                    let path = splitPath(name, atoms: atoms)
-                    expect(path).to(equal([
-                        "CaltrainService",
-                        "#routes(from:to:scheduleType:)",
-                        "for a direct diesel trip (Morgan Hill to Gilroy)",
-                        "is not a transfer, since both endpoints are South County",
-                    ]))
-                }
-
-                it("resolves a parenthetical aside") {
-                    let atoms: Set<String> = [
-                        "GoodTimes",
-                        "when 'today' is fixed via debugOverrideDotw",
-                        "and today is Saturday (6)",
-                        "computes tomorrow as Sunday (0), wrapping the week",
-                    ]
-                    let name =
-                        "GoodTimes, when 'today' is fixed via debugOverrideDotw, and today is Saturday (6), computes tomorrow as Sunday (0), wrapping the week"
-                    let path = splitPath(name, atoms: atoms)
-                    expect(path.last).to(equal("computes tomorrow as Sunday (0), wrapping the week"))
-                    expect(path.count).to(equal(4))
-                }
-            }
-
-            context("when it can't trust the atom dictionary") {
-                it("falls back to the heuristic when atoms is empty") {
-                    let path = splitPath("foo, bar (baz, qux), last", atoms: [])
-                    expect(path).to(equal(["foo", "bar (baz, qux)", "last"]))
-                }
-
-                it("falls back to the heuristic when the decomposition is ambiguous") {
-                    // Two different valid decompositions exist against this atom
-                    // set, so splitPath can't trust either and must fall back.
-                    let atoms: Set<String> = ["a", "b, c", "a, b", "c"]
-                    let path = splitPath("a, b, c", atoms: atoms)
-                    expect(path).to(equal(["a", "b", "c"]))  // heuristic: plain top-level split
-                }
-            }
-        }
-
         describe("Engine") {
             context("tree rendering") {
                 it("emits the suite header with a blank line before it") {

@@ -45,12 +45,48 @@ The test target (`XctidyKitTests`) depends on
 `Package.swift`) -- Swift Package Manager resolves and fetches both
 automatically on first build, no separate setup step.
 
-To run a single spec file or narrow down what runs, use Quick's normal
-filtering, e.g.:
+Every spec file (`LoadKnownAtomsSpec`, `SplitPathSpec`, `EngineSpec`,
+`AnsiColorDemoSpec`) is a `QuickSpec` subclass, so SwiftPM's `--filter`
+doesn't work on any of them -- `swift test --filter EngineSpec` silently
+matches zero tests rather than erroring. `--filter` builds its match list
+from statically-declared test methods before running anything, and Quick
+generates its test methods dynamically at runtime instead (via XCTest's
+`+testInvocations` hook), so none of them ever appear in that list.
+
+You might reach for `fdescribe`/`fcontext`/`fit` next, since Quick's docs
+frame those as the way to scope a run. Don't rely on them across files --
+when more than one spec file exists in the target, focusing one of them
+doesn't reliably skip the others. SwiftPM (unlike Xcode) discovers each
+`QuickSpec` subclass's examples lazily, one class at a time, the first
+time XCTest asks that class for its test list; each class locks in "run
+everything" the moment it's asked, based on whatever's been registered
+*so far*. If your focused class happens to be asked after some other
+class, that other class already decided to run everything before it ever
+saw your focus. This is a real, currently-unfixed Quick bug --
+[Quick/Quick#886](https://github.com/Quick/Quick/issues/886) -- not
+anything specific to this project. `fdescribe` is still fine *within* a
+single file you've already isolated some other way; it's just not a
+substitute for scoping the run itself.
+
+The reliable way to scope a run to one spec file needs no source edits at
+all: drive the build through `xcodebuild` instead of `swift test`, and
+let `-only-testing:` select the class before Quick's focus system ever
+gets involved. This works directly against the bare `Package.swift`, no
+`.xcodeproj` required (Xcode 11+):
 
 ```bash
-swift test --filter EngineSpec
+xcodebuild -list                                      # confirm the scheme name (likely "xctidy")
+xcodebuild test -scheme xctidy -destination 'platform=macOS' \
+  -only-testing:XctidyKitTests/SplitPathSpec | xctidy Tests/XctidyKitTests
 ```
+
+This is also why every spec file here sticks to **one `QuickSpec` class,
+one top-level `describe`** -- the file's class name is all you need to
+isolate it with `-only-testing:`, no hunting through the file for what to
+focus. See the README's [Writing specs](../README.md#writing-specs)
+section for the full convention, and
+`Tests/XctidyKitTests/SplitPathSpec.swift` for as plain an example as it
+gets.
 
 ## Project layout
 
@@ -64,7 +100,11 @@ Sources/
     main.swift          CLI entry point: arg parsing, reads stdin, prints output
 Tests/
   XctidyKitTests/
-    EngineSpec.swift           main spec -- loadKnownAtoms, splitPath, Engine
+    LoadKnownAtomsSpec.swift   loadKnownAtoms, with its own fixtures
+    SplitPathSpec.swift        splitPath, fixture-free (inline literals only)
+    EngineSpec.swift           the Engine class: tree rendering, noise
+                               suppression, color output, and all three
+                               render styles
     AnsiColorDemoSpec.swift    a real Quick spec used to produce a genuine
                                comma-flattened name, so the disambiguation
                                logic is tested against real Quick output and
@@ -73,6 +113,10 @@ docs/
   HOW_IT_WORKS.md       the engine's internals, output styles, limitations
   DEVELOPMENT.md        this file
 ```
+
+Each file above is one `QuickSpec` class with exactly one top-level
+`describe`, matching the file's name and subject -- see "Writing specs" in
+the README for why that convention matters if you're adding a new spec.
 
 `XctidyKit` is a separate target from the `xctidy` executable specifically
 so the test target can `@testable import XctidyKit` without the testability
