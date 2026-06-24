@@ -8,7 +8,7 @@
 ![Example Screenshot](docs/example.png)
 
 
-**`xctidy` adds nested describe/context/it tree support to xcodebuild.**
+**`xctidy` adds nested describe/context/it tree support to `xcodebuild`.**
 
 An alternative to xcbeautify and xcpretty written in Swift.
 
@@ -17,7 +17,7 @@ An alternative to xcbeautify and xcpretty written in Swift.
 - Test output is more concise and readable
 - Familiar output conventions from RSpec and Mocha
 - Drop-in `xcodebuild_formatter` for fastlane's `scan`/`gym`/`snapshot`
-- Written in Swift: compiles to a static binary
+- Written in Swift and compiles to a static binary
 
 ## Installation
 
@@ -76,8 +76,8 @@ you've probably already seen:
 | Flag | Short form | Convention | Look |
 |---|---|---|---|
 |   |   | Our base formatter | glyph + `name (N seconds)`, failures add `(FAILED - N)` |
-| `--fd` | `-fd` | RSpec's `-fd`/documentation formatter | plain colored name, yellow `(PENDING)` for skips |
-| `--spec` | `-fs` | Mocha's default `spec` reporter / Jest | green `✔` + gray name, red `✗ name (FAILED - N)` |
+| `--fd` | `-fd` | RSpec's format documentation | plain colored name, yellow `(PENDING)` for skips |
+| `--spec` | `-fs` | Mocha's default reporter | green `✔` + gray name, red `✗ name (FAILED - N)` |
 
 All three end with the exact same closing footer, byte-for-byte, lifted
 from real xcbeautify: a green `Test Succeeded`/red `Test Failed` headline,
