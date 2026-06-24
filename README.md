@@ -135,9 +135,9 @@ play. This works directly against a bare `Package.swift`, no
 `.xcodeproj` required (Xcode 11+):
 
 ```bash
-xcodebuild -list                                          # confirm the scheme name
+xcodebuild -list  # confirm the scheme name
 xcodebuild test -scheme xctidy -destination 'platform=macOS' \
-  -only-testing:XctidyKitTests/CaltrainServiceSpec | xctidy Tests
+-only-testing:XctidyKitTests/SplitPathSpec | xctidy Tests
 ```
 
 This is also the same mechanism `xcodebuild test [flags] | xctidy Tests`
