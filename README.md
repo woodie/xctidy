@@ -73,11 +73,11 @@ end
 Three named styles, each matching a convention from some other test runner
 you've probably already seen:
 
-| Flag | Short form | Convention | Look |
-|---|---|---|---|
-|   |   | Our base formatter | glyph + `name (N seconds)`, failures add `(FAILED - N)` |
-| `--fd` | `-fd` | RSpec's format documentation | plain colored name, yellow `(PENDING)` for skips |
-| `--spec` | `-fs` | Mocha's default reporter | green `✔` + gray name, red `✗ name (FAILED - N)` |
+| Flag | Convention | Look |
+|---|---|---|
+|   | Our base formatter | glyph + `name (N seconds)`, failures add `(FAILED - N)` |
+| -fd | RSpec's format documentation | plain colored name, yellow `(PENDING)` for skips |
+| -fs | Mocha's default reporter | green `✔` + gray name, red `✗ name (FAILED - N)` |
 
 All three end with the exact same closing footer, byte-for-byte, lifted
 from real xcbeautify: a green `Test Succeeded`/red `Test Failed` headline,
