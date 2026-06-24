@@ -39,7 +39,7 @@ var sawPositional = false
 
 func parseStyle(_ raw: String) -> RenderStyle? {
     switch raw {
-    case "documentation": return .fd
+    case "documentation": return .doc
     case "spec": return .spec
     default: return nil
     }
@@ -50,7 +50,7 @@ var i = 0
 while i < args.count {
     switch args[i] {
     case "-fd":
-        style = .fd
+        style = .doc
     case "-fs":
         style = .spec
     case "--format":

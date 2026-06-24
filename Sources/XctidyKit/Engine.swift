@@ -1,21 +1,21 @@
 import Foundation
 
-/// xctidy's core engine.
-///
-/// Parses RAW `xcodebuild test` output directly -- the same textual protocol
-/// xcpretty's `parser.rb` and xcbeautify both regex-match (there is no formal
-/// API; this *is* the API). No dependency on xcbeautify or xcpretty being
-/// installed.
-///
-/// Quick promotes the full comma-joined `describe`/`context`/`it` text
-/// (literal prose, commas and all) to be the XCTest selector name, so a raw
-/// `Test Case '-[Class full, prose, name]'` line can't be split on every
-/// comma -- some commas are nesting separators, some are just commas in the
-/// prose. This engine disambiguates by cross-referencing the literal
-/// `describe(...)`/`context(...)`/`it(...)` strings found in the project's
-/// `.swift` files under `Tests/` (see `loadKnownAtoms`), falling back to a
-/// paren-depth-aware heuristic split when that dictionary can't resolve the
-/// name uniquely.
+// xctidy's core engine.
+//
+// Parses RAW `xcodebuild test` output directly -- the same textual protocol
+// xcpretty's `parser.rb` and xcbeautify both regex-match (there is no formal
+// API; this *is* the API). No dependency on xcbeautify or xcpretty being
+// installed.
+//
+// Quick promotes the full comma-joined `describe`/`context`/`it` text
+// (literal prose, commas and all) to be the XCTest selector name, so a raw
+// `Test Case '-[Class full, prose, name]'` line can't be split on every
+// comma -- some commas are nesting separators, some are just commas in the
+// prose. This engine disambiguates by cross-referencing the literal
+// `describe(...)`/`context(...)`/`it(...)` strings found in the project's
+// `.swift` files under `Tests/` (see `loadKnownAtoms`), falling back to a
+// paren-depth-aware heuristic split when that dictionary can't resolve the
+// name uniquely.
 
 // MARK: - Raw xcodebuild line matchers
 //
@@ -44,8 +44,8 @@ enum Matchers {
 }
 
 extension NSRegularExpression {
-    func firstMatch(in s: String) -> NSTextCheckingResult? {
-        firstMatch(in: s, range: NSRange(location: 0, length: (s as NSString).length))
+    func firstMatch(in str: String) -> NSTextCheckingResult? {
+        firstMatch(in: str, range: NSRange(location: 0, length: (str as NSString).length))
     }
 }
 
@@ -56,136 +56,6 @@ extension NSTextCheckingResult {
         guard r.location != NSNotFound else { return nil }
         return (original as NSString).substring(with: r)
     }
-}
-
-// MARK: - Dictionary-based comma disambiguation
-//
-// Builds a set of every known describe/context/it literal string by
-// scanning the project's spec files, then tries to decompose a flattened
-// Quick name into a `", "`-joined sequence of those known atoms. We only
-// need to know whether there is exactly one way to do that (unambiguous) or
-// not (fall back to a heuristic), so the search stops after finding 2
-// decompositions.
-
-public func unescapeSwiftLiteral(_ raw: String) -> String {
-    var out = ""
-    let chars = Array(raw)
-    var i = 0
-    while i < chars.count {
-        let ch = chars[i]
-        if ch == "\\", i + 1 < chars.count {
-            switch chars[i + 1] {
-            case "n": out.append("\n")
-            case "t": out.append("\t")
-            default: out.append(chars[i + 1])
-            }
-            i += 2
-        } else {
-            out.append(ch)
-            i += 1
-        }
-    }
-    return out
-}
-
-/// Scans `*.swift` files directly inside `specsDir` (non-recursive, matching
-/// the original Python tool's `Path(specs_dir).glob("*.swift")`) for
-/// `describe("...")` / `context("...")` / `it("...")` string literals.
-public func loadKnownAtoms(specsDir: String) -> Set<String> {
-    var atoms = Set<String>()
-    let fm = FileManager.default
-    guard let entries = try? fm.contentsOfDirectory(atPath: specsDir) else {
-        return atoms
-    }
-    for file in entries.filter({ $0.hasSuffix(".swift") }).sorted() {
-        let path = (specsDir as NSString).appendingPathComponent(file)
-        guard let text = try? String(contentsOfFile: path, encoding: .utf8) else { continue }
-        let nsText = text as NSString
-        let range = NSRange(location: 0, length: nsText.length)
-        for m in Matchers.atomCall.matches(in: text, range: range) {
-            let raw = nsText.substring(with: m.range(at: 1))
-            atoms.insert(unescapeSwiftLiteral(raw))
-        }
-    }
-    return atoms
-}
-
-func findDecompositions(_ name: String, atoms: Set<String>, limit: Int = 2) -> [[String]] {
-    if atoms.isEmpty { return [] }
-    let byLen = atoms.sorted { $0.count > $1.count }
-    let chars = Array(name)
-    let n = chars.count
-    var results: [[String]] = []
-
-    func rec(_ start: Int, _ path: inout [String]) {
-        if results.count >= limit { return }
-        if start == n {
-            results.append(path)
-            return
-        }
-        for atom in byLen {
-            if results.count >= limit { return }
-            if atom.isEmpty { continue }
-            let atomChars = Array(atom)
-            let end = start + atomChars.count
-            if end > n { continue }
-            if Array(chars[start..<end]) != atomChars { continue }
-            if end == n {
-                path.append(atom)
-                rec(end, &path)
-                path.removeLast()
-            } else if end + 2 <= n, chars[end] == ",", chars[end + 1] == " " {
-                path.append(atom)
-                rec(end + 2, &path)
-                path.removeLast()
-            }
-        }
-    }
-
-    var path: [String] = []
-    rec(0, &path)
-    return results
-}
-
-/// Splits only at top-level (paren-depth 0) `", "` -- used when the
-/// dictionary is empty or can't disambiguate. Keeps parenthetical asides
-/// like "(San Francisco to San Jose Diridon)" intact.
-func splitHeuristic(_ name: String) -> [String] {
-    var parts: [String] = []
-    var current = ""
-    var depth = 0
-    let chars = Array(name)
-    var i = 0
-    let n = chars.count
-    while i < n {
-        let ch = chars[i]
-        if ch == "(" {
-            depth += 1
-            current.append(ch)
-            i += 1
-        } else if ch == ")" {
-            depth = max(depth - 1, 0)
-            current.append(ch)
-            i += 1
-        } else if depth == 0, i + 1 < n, chars[i] == ",", chars[i + 1] == " " {
-            parts.append(current)
-            current = ""
-            i += 2
-        } else {
-            current.append(ch)
-            i += 1
-        }
-    }
-    parts.append(current)
-    return parts
-}
-
-public func splitPath(_ name: String, atoms: Set<String>) -> [String] {
-    let decompositions = findDecompositions(name, atoms: atoms)
-    if decompositions.count == 1 {
-        return decompositions[0]
-    }
-    return splitHeuristic(name)
 }
 
 // MARK: - Color output
@@ -204,7 +74,7 @@ enum AnsiColor: String {
 /// cross-reference into the Failures section (see docs/HOW_IT_WORKS.md,
 /// "Failure folding").
 ///
-/// `.fd` clones real RSpec's `-fd`/documentation formatter's *leaf*
+/// `.doc` clones real RSpec's `-fd`/documentation formatter's *leaf*
 /// rendering: a plain colored name with no glyph and no per-test time,
 /// and pending examples are yellow and say "(PENDING)" (RSpec's own
 /// wording, not Xcode's "SKIPPED").
@@ -219,7 +89,7 @@ enum AnsiColor: String {
 /// All three styles end with exactly the same thing: real xcbeautify's own
 /// run-results footer -- a green "Test Succeeded" (or red "Test Failed")
 /// headline, then "Tests Passed: X failed, Y skipped, Z total (N seconds)".
-/// `.fd` and `.spec` don't additionally print RSpec's/Mocha's own native run
+/// `.doc` and `.spec` don't additionally print RSpec's/Mocha's own native run
 /// summary ("Finished in.../X examples", "N passing (Ttime)") -- an earlier
 /// version of this tool stacked that native summary before the xcbeautify
 /// footer, but seeing all three styles' real output side by side made that
@@ -228,14 +98,14 @@ enum AnsiColor: String {
 /// `if exampleCount > 0` block.
 public enum RenderStyle: Equatable {
     case classic
-    case fd
+    case doc
     case spec
 }
 
 // MARK: - Failures
 
 public struct EngineFailure {
-    public let n: Int
+    public let num: Int
     public let full: [String]
     public let message: String
     public let location: String
@@ -261,13 +131,13 @@ public final class Engine {
         self.style = style
     }
 
-    private func colorize(_ color: AnsiColor, _ s: String) -> String {
-        guard tty else { return s }
-        return "\u{1B}[\(color.rawValue)m\(s)\u{1B}[0m"
+    private func colorize(_ color: AnsiColor, _ txt: String) -> String {
+        guard tty else { return txt }
+        return "\u{1B}[\(color.rawValue)m\(txt)\u{1B}[0m"
     }
 
-    private func emit(_ s: String = "") {
-        out.append(s)
+    private func emit(_ txt: String = "") {
+        out.append(txt)
     }
 
     /// Feed one line of raw `xcodebuild test` output. Lines that are part of
@@ -288,18 +158,16 @@ public final class Engine {
             return
         }
         if let m = Matchers.failureDetail.firstMatch(in: line),
-            let location = m.group(1, in: line), let reason = m.group(4, in: line)
-        {
+            let location = m.group(1, in: line), let reason = m.group(4, in: line) {
             curFailureLines.append((location: location, reason: reason))
             return
         }
         if let m = Matchers.caseFinished.firstMatch(in: line),
-            let name = m.group(2, in: line), let state = m.group(3, in: line)
-        {
+            let name = m.group(2, in: line), let state = m.group(3, in: line) {
             let path = splitPath(name, atoms: atoms)
             // group(4) is the per-test "(N seconds)" xcodebuild reports for
             // every case regardless of outcome -- .classic surfaces it
-            // directly (see RenderStyle doc comment); .fd/.spec don't use it
+            // directly (see RenderStyle doc comment); .doc/.spec don't use it
             // per-leaf, only lastTestTimeText's run-level total.
             let time = m.group(4, in: line)
             renderCase(path: path, state: state, time: time)
@@ -320,8 +188,7 @@ public final class Engine {
             return
         }
         if line.contains("error:") || line.contains("fatal error:")
-            || line.contains("** BUILD FAILED **") || line.contains("** TEST FAILED **")
-        {
+            || line.contains("** BUILD FAILED **") || line.contains("** TEST FAILED **") {
             emit(line)
             return
         }
@@ -342,67 +209,78 @@ public final class Engine {
         }
         let leafDepth = path.count - 1
         let name = path[path.count - 1]
-        var label = name
 
-        // .classic's "(N seconds)" suffix, colored to match its glyph --
-        // mirrors xcbeautify's own .coloredTime().
-        func timedSuffix(_ color: AnsiColor) -> String {
-            guard let time else { return "" }
-            return " (\(colorize(color, time)) seconds)"
-        }
-
+        let label: String
         switch state {
         case "passed":
-            switch style {
-            case .classic:
-                label = "\(colorize(.green, "✔")) \(name)\(timedSuffix(.green))"
-            case .fd:
-                label = colorize(.green, name)
-            case .spec:
-                label = colorize(.green, "✔") + " " + colorize(.gray, name)
-            }
+            label = labelForPassed(name: name, time: time)
         case "skipped":
-            pendingCount += 1
-            switch style {
-            case .classic:
-                // No "(SKIPPED)" text suffix here, deliberately -- .classic
-                // distinguishes skips from passes by glyph (⊘ vs ✔) and
-                // color alone. -fd and -fs both spell it out in words;
-                // reach for those if a glyph-only signal isn't enough in
-                // your terminal/font.
-                label = "\(colorize(.cyan, "⊘")) \(name)\(timedSuffix(.cyan))"
-            case .fd:
-                label = colorize(.yellow, "\(name) (PENDING)")
-            case .spec:
-                label = colorize(.cyan, "- \(name) (SKIPPED)")
-            }
+            label = labelForSkipped(name: name, time: time)
         case "failed":
-            let n = failures.count + 1
-            let message = curFailureLines.map { $0.reason }.joined(separator: "\n")
-            let location = curFailureLines.first?.location ?? "?"
-            failures.append(
-                EngineFailure(
-                    n: n,
-                    full: path,
-                    message: message.isEmpty ? "(no failure detail captured)" : message,
-                    location: location))
-            switch style {
-            case .classic:
-                // Keeps the "(FAILED - N)" Failures cross-reference (the
-                // headline improvement raw-protocol parsing makes possible)
-                // alongside the original's glyph + per-test time.
-                label = "\(colorize(.red, "✖")) \(name) (FAILED - \(n))\(timedSuffix(.red))"
-            case .fd:
-                label = colorize(.red, "\(name) (FAILED - \(n))")
-            case .spec:
-                label = colorize(.red, "✗ \(name) (FAILED - \(n))")
-            }
+            label = labelForFailed(name: name, path: path, time: time)
         default:
-            break
+            label = name
         }
 
         emit(String(repeating: "  ", count: leafDepth + 1) + label)
         lastPath = path
+    }
+
+    // .classic's "(N seconds)" suffix, colored to match its glyph -- mirrors
+    // xcbeautify's own .coloredTime().
+    private func timedSuffix(_ color: AnsiColor, _ time: String?) -> String {
+        guard let time else { return "" }
+        return " (\(colorize(color, time)) seconds)"
+    }
+
+    private func labelForPassed(name: String, time: String?) -> String {
+        switch style {
+        case .classic:
+            return "\(colorize(.green, "✔")) \(name)\(timedSuffix(.green, time))"
+        case .doc:
+            return colorize(.green, name)
+        case .spec:
+            return colorize(.green, "✔") + " " + colorize(.gray, name)
+        }
+    }
+
+    private func labelForSkipped(name: String, time: String?) -> String {
+        pendingCount += 1
+        switch style {
+        case .classic:
+            // No "(SKIPPED)" text suffix here, deliberately -- .classic
+            // distinguishes skips from passes by glyph (⊘ vs ✔) and color
+            // alone. -fd and -fs both spell it out in words; reach for those
+            // if a glyph-only signal isn't enough in your terminal/font.
+            return "\(colorize(.cyan, "⊘")) \(name)\(timedSuffix(.cyan, time))"
+        case .doc:
+            return colorize(.yellow, "\(name) (PENDING)")
+        case .spec:
+            return colorize(.cyan, "- \(name) (SKIPPED)")
+        }
+    }
+
+    private func labelForFailed(name: String, path: [String], time: String?) -> String {
+        let num = failures.count + 1
+        let message = curFailureLines.map { $0.reason }.joined(separator: "\n")
+        let location = curFailureLines.first?.location ?? "?"
+        failures.append(
+            EngineFailure(
+                num: num,
+                full: path,
+                message: message.isEmpty ? "(no failure detail captured)" : message,
+                location: location))
+        switch style {
+        case .classic:
+            // Keeps the "(FAILED - N)" Failures cross-reference (the
+            // headline improvement raw-protocol parsing makes possible)
+            // alongside the original's glyph + per-test time.
+            return "\(colorize(.red, "✖")) \(name) (FAILED - \(num))\(timedSuffix(.red, time))"
+        case .doc:
+            return colorize(.red, "\(name) (FAILED - \(num))")
+        case .spec:
+            return colorize(.red, "✗ \(name) (FAILED - \(num))")
+        }
     }
 
     public func finish() -> String {
@@ -411,7 +289,7 @@ public final class Engine {
             emit("Failures:")
             for f in failures {
                 emit()
-                emit("  \(f.n)) \(f.full.joined(separator: " "))")
+                emit("  \(f.num)) \(f.full.joined(separator: " "))")
                 for line in f.message.split(separator: "\n", omittingEmptySubsequences: false) {
                     emit("     \(line)")
                 }
@@ -421,7 +299,7 @@ public final class Engine {
         if exampleCount > 0 {
             // Real xcbeautify's own run-results footer, lifted verbatim
             // from a genuine `xcodebuild test` run. It's the *only* run
-            // summary any style prints -- .fd and .spec render their leaves
+            // summary any style prints -- .doc and .spec render their leaves
             // differently above (see RenderStyle's doc comment) but don't
             // get their own native RSpec-/Mocha-style run summary on top of
             // it, so there's exactly one footer convention to read

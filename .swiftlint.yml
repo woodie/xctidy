@@ -1,0 +1,37 @@
+excluded:
+  - .build
+
+disabled_rules:
+  - force_try
+  # `try!` here only wraps hardcoded, validated-at-write-time
+  # NSRegularExpression patterns (the Matchers enum in Engine.swift) and
+  # test-setup helpers that should crash loudly if they ever fail -- not
+  # the kind of un-vetted force-unwrap this rule exists to catch.
+
+# Single-letter names below are existing, idiomatic uses already reviewed
+# and intentionally kept short -- loop counters, regex-match locals, and a
+# couple of one-off comparisons -- not names introduced by accident.
+# (Quick and Nimble's own .swiftlint.yml configs do the same thing.)
+identifier_name:
+  excluded:
+    - i  # loop counters
+    - m  # NSRegularExpression match result
+    - n  # array/string length (findDecompositions, splitHeuristic)
+    - a  # for (a, b) in zip(path, lastPath) -- pairwise comparison
+    - b  # for (a, b) in zip(path, lastPath) -- pairwise comparison
+    - f  # for f in failures
+    - r  # NSTextCheckingResult.range(at:) result
+    - t  # lastTestTimeText local
+
+line_length:
+  warning: 120
+  error: 200
+  ignores_urls: true
+  ignores_comments: true
+
+# The codebase already consistently uses trailing commas in multi-line
+# collection literals (easier diffs when appending an element); Quick and
+# Nimble's own .swiftlint.yml configs make this same choice, opposite of
+# SwiftLint's bare default (no trailing comma).
+trailing_comma:
+  mandatory_comma: true

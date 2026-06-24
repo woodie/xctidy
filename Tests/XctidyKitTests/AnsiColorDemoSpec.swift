@@ -14,7 +14,7 @@ import Nimble
 /// disambiguation -- cross-referencing this file's own describe/context/it
 /// literals -- resolves it correctly, which is the actual point of this demo.
 final class AnsiColorDemoSpec: QuickSpec {
-    override class func spec() {
+    override static func spec() {
         describe("AnsiColor") {
             context("when rendering a test label") {
                 it("renders a passed label in green (32)") {

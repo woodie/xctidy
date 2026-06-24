@@ -1,0 +1,16 @@
+disabled_rules:
+  - line_length
+  - function_body_length
+  - type_body_length
+# Test fixtures (EngineSpec.swift) intentionally mirror real raw
+# `xcodebuild test` protocol lines and Quick describe/context/it prose
+# verbatim, some well past 120 chars -- wrapping them would make them
+# less faithful to the actual output they're proving xctidy parses
+# correctly.
+#
+# function_body_length/type_body_length are disabled because Quick's
+# `override static func spec()` pattern puts the entire describe/context/it
+# tree for a spec class in one function/type body -- there's no way to
+# split it without breaking the nested-closure structure Quick requires.
+# Quick's own Tests/.swiftlint.yml disables function_body_length (plus
+# identifier_name, line_length, type_name) for exactly this reason.

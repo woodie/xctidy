@@ -48,7 +48,7 @@ private func writeTempSpecsDir(_ files: [String: String]) -> String {
 }
 
 final class EngineSpec: QuickSpec {
-    override class func spec() {
+    override static func spec() {
 
         describe("loadKnownAtoms") {
             it("scans describe/context/it literals out of the given directory") {
@@ -336,7 +336,7 @@ final class EngineSpec: QuickSpec {
 
             context("rspec fidelity (--fd)") {
                 it("renders skipped examples with RSpec's (PENDING) wording") {
-                    let engine = Engine(atoms: ["returns nil"], tty: false, style: .fd)
+                    let engine = Engine(atoms: ["returns nil"], tty: false, style: .doc)
                     engine.feedLine(
                         "Test Case '-[NextCaltrainTests.CaltrainServiceSpec CaltrainService, #nextIndex(trips:minutes:), when given an empty trip list, returns nil]' skipped (0.0001 seconds)."
                     )
@@ -344,13 +344,13 @@ final class EngineSpec: QuickSpec {
                 }
 
                 it("colors pending examples yellow, not cyan, when a TTY") {
-                    let engine = Engine(atoms: [], tty: true, style: .fd)
+                    let engine = Engine(atoms: [], tty: true, style: .doc)
                     engine.feedLine("Test Case '-[Suite foo]' skipped (0.001 seconds).")
                     expect(engine.finish()).to(contain("\u{1B}[33m"))
                 }
 
                 it("ends with the shared xcbeautify-style footer, not RSpec's own 'Finished in' summary") {
-                    let engine = Engine(atoms: [], tty: false, style: .fd)
+                    let engine = Engine(atoms: [], tty: false, style: .doc)
                     engine.feedLine("Test Case '-[Suite foo]' passed (0.001 seconds).")
                     engine.feedLine("Test Case '-[Suite bar]' skipped (0.001 seconds).")
                     engine.feedLine(" Executed 2 tests, with 0 failures (0 unexpected) in 0.026 (0.030) seconds")
@@ -374,7 +374,7 @@ final class EngineSpec: QuickSpec {
                     let expectedFooter =
                         "\nTest Succeeded\nTests Passed: 0 failed, 0 skipped, 1 total (0.026 seconds)\n"
                     expect(run(.classic).hasSuffix(expectedFooter)).to(beTrue())
-                    expect(run(.fd).hasSuffix(expectedFooter)).to(beTrue())
+                    expect(run(.doc).hasSuffix(expectedFooter)).to(beTrue())
                     expect(run(.spec).hasSuffix(expectedFooter)).to(beTrue())
                 }
             }

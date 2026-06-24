@@ -57,7 +57,9 @@ swift test --filter EngineSpec
 ```
 Sources/
   XctidyKit/
-    Engine.swift       core engine: parsing, comma disambiguation, rendering
+    Engine.swift         matchers, color/style, the Engine class (parsing
+                         dispatch + rendering)
+    PathSplitting.swift  comma disambiguation: loadKnownAtoms, splitPath
   xctidy/
     main.swift          CLI entry point: arg parsing, reads stdin, prints output
 Tests/
@@ -106,18 +108,36 @@ on.
 
 ## Releasing
 
-There's no release automation yet (no CI, no tap, no Mint listing -- see the
-README's badge row). Until that exists, cutting a release is just:
+CI exists now (`.github/workflows/makefile.yml`, badge in the README), and
+the first tag (`v0.1.0`) is out, but there's still no tap and no Mint
+listing.
+
+### Choosing a version number
+
+Tags are `vMAJOR.MINOR.PATCH`, following semver:
+
+- **PATCH** (`v0.1.0` -> `v0.1.1`): bug fixes, doc changes, anything that
+  doesn't change `xctidy`'s behavior or CLI surface.
+- **MINOR** (`v0.1.0` -> `v0.2.0`): new output style, new flag, new
+  capability -- additive, nothing existing breaks.
+- **MAJOR**: a breaking CLI change (a flag removed/renamed, a style's output
+  format changed in a way a script could depend on). We're starting at
+  `0.x` deliberately -- the flag surface (`-fd`/`-fs`/`--format`) only
+  settled recently, so nothing is promised stable yet. Move to `1.0.0` once
+  that surface has held for a while and breaking it would actually be
+  noteworthy.
+
+### Cutting a release
 
 ```bash
 git tag vX.Y.Z
 git push origin vX.Y.Z
 ```
 
-then drafting a GitHub release from that tag. Update the README's badge row
-to include the CI and release badges once a `.github/workflows/` CI
-workflow actually exists -- see the commented-out note above the badges in
-`README.md`.
+then draft a GitHub release from that tag (Releases -> Draft a new release
+-> pick the tag). Release notes can stay short -- a "Highlights" list of
+what's new/fixed since the last tag is enough; this isn't a project that
+needs a formal changelog yet.
 
 ## Contributing
 

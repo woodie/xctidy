@@ -4,8 +4,7 @@
 [![CI](https://github.com/woodie/xctidy/actions/workflows/makefile.yml/badge.svg)](https://github.com/woodie/xctidy/actions/workflows/makefile.yml)
 [![Release](https://img.shields.io/github/v/release/woodie/xctidy.svg)](https://github.com/woodie/xctidy/releases/latest)
 [![License](https://img.shields.io/github/license/woodie/xctidy.svg)](LICENSE)
-
-<!-- CI and release badges land here once a GitHub Actions workflow and a tagged release exist. -->
+[![Release](https://img.shields.io/github/v/release/woodie/xctidy.svg)](https://github.com/woodie/xctidy/releases/latest)
 
 ![Example Screenshot](docs/example.png)
 

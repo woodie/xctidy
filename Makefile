@@ -6,6 +6,7 @@ CP=/bin/cp -f
 MKDIR=/bin/mkdir -p
 RM=/bin/rm -f
 SWIFT?=swift
+SWIFTLINT?=swiftlint
 
 # Ask for sudo password when the target isn't writable
 SUDO:=$(shell d="$(PREFIX)/bin"; while [ ! -d "$$d" ] && [ "$$d" != "/" ]; do d=$$(dirname "$$d"); done; test -w "$$d" && echo "" || echo "sudo")
@@ -22,6 +23,10 @@ build:
 .PHONY: test
 test:
 	$(SWIFT) test
+
+.PHONY: lint
+lint:
+	$(SWIFTLINT) lint --strict
 
 .PHONY: install
 install: build

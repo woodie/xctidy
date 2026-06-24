@@ -10,7 +10,14 @@ permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  # Keyed on the ref (stable per branch/PR), not run_id (unique per run) --
+  # for push events github.head_ref is empty, so the old key fell back to
+  # run_id and never actually grouped anything, letting a slow-to-start
+  # macOS runner for an old, already-superseded commit straggle in *after*
+  # a newer commit's run had already finished and reported success --
+  # clobbering the badge with a stale failure. Keying on github.ref means a
+  # new push to the same branch cancels any older run still queued/running.
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -22,6 +29,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+
+      - name: Install SwiftLint
+        run: brew install swiftlint
+
+      - name: Lint
+        run: make lint
 
       - name: Build
         run: make build
