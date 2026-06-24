@@ -70,35 +70,16 @@ end
 
 ## Output styles
 
-Three named styles, each matching a convention from some other test runner
-you've probably already seen:
+Three named styles, each matching a convention from a familiar test runner.
+All three end with the same xcbeautify-style footer.
 
 | Flag | Convention | Look |
 |---|---|---|
-|   | Our base formatter | glyph + `name (N seconds)`, failures add `(FAILED - N)` |
-| -fd | RSpec's format documentation | plain colored name, yellow `(PENDING)` for skips |
-| -fs | Mocha's default reporter | green `✔` + gray name, red `✗ name (FAILED - N)` |
+|   | Our base formatter | Glyph + `name (N seconds)`, failures add `(FAILED - N)` |
+| -fd | RSpec's doc format | Plain colored name, yellow `(PENDING)` for skips |
+| -fs | Mocha's spec format | Green `✔` + gray name, red `✗ name (FAILED - N)` |
 
-All three end with the exact same closing footer, byte-for-byte, lifted
-from real xcbeautify: a green `Test Succeeded`/red `Test Failed` headline,
-then `Tests Passed: X failed, Y skipped, Z total (N seconds)`. `--fd` and
-`--spec` only change how the tree above that footer looks (RSpec's/Mocha's
-own native run summary isn't printed on top of it) -- one shared, unambiguous
-ending regardless of style.
-
-Each style is also reachable through `--format <name>` (`documentation`,
-`spec`, `classic`) or, for the two non-default styles, its short form --
-the `-f<letter>` idiom RSpec itself uses, since `rspec -fd` is really `-f`
-(`--format`) immediately followed by the formatter's single-letter code,
-not a dedicated two-letter flag. Classic has no short form -- it's already
-what you get with no flag at all, so a `-fc` that just reproduced default
-behavior would only confuse people about what it's for. `--style <name>`
-(with `fd` in place of `documentation`) still works too -- pick whichever
-reads best in your pipeline.
-
-The screenshot above is `--fd` -- real `swift test` output from this
-project's own `EngineSpec.swift` suite, piped through that style. Full text
-samples of all three styles:
+The screenshot above is `--fd`. Full samples of all three styles:
 [docs/HOW_IT_WORKS.md](docs/HOW_IT_WORKS.md#output-styles).
 
 ## Development

@@ -325,3 +325,40 @@ README's only link to the Known limitations section -- the limitations
 themselves are still fully documented in `docs/HOW_IT_WORKS.md` and
 `docs/DEVELOPMENT.md`, just no longer surfaced from the README itself. Flag
 this if discoverability of that section from the README matters later.
+
+The user then did a further round of README cleanup entirely on their own
+(four commits -- `51e6de2`, `0162e6d`, `5cd70a9`, `84e5dab` -- on top of
+Cowork's edits above), discovered after the fact via `git log`/`git diff`.
+Notable changes: the intro reverted from Cowork's "xctidy brings RSpec's
+documentation format and Mocha's spec output format to `xcodebuild`" sentence
+back to the user's own earlier first draft, "`xctidy` adds nested
+describe/context/it tree support to `xcodebuild`. An alternative to
+xcbeautify and xcpretty written in Swift." -- presumably a deliberate final
+choice rather than an accidental revert, since it's the user's own wording
+either way. The entire "Why xctidy instead of xcbeautify or xcpretty?"
+section was deleted (its "Reach for xctidy when:"/"Keep xcbeautify/xcpretty
+when:" guidance and the Quick/Nimble-only scoping note are gone from
+`README.md`, though the same scoping detail still lives in
+`docs/DEVELOPMENT.md`'s "Known limitations to be aware of"). The Output
+styles table lost its "Short form" column and got two Convention-column
+rewords. The Features list's last bullet picked up "and" ("Written in Swift
+and compiles to a static binary"). None of this broke any links --
+`docs/HOW_IT_WORKS.md#output-styles` and `docs/DEVELOPMENT.md` are both
+still referenced and still resolve.
+
+Immediately after, the user asked Cowork to go further on the "Output
+styles" section specifically: "rip out all the explanation about flags and
+just get to the basics, a couple sentences." Cowork cut the paragraph
+explaining `--format <name>`/`--style <name>` and the `-f<letter>` RSpec
+short-form idiom (entirely flag-mechanics explanation, now undocumented in
+README -- still discoverable via `main.swift`'s usage comment or
+`docs/HOW_IT_WORKS.md` if needed), and trimmed the byte-for-byte-footer
+paragraph down to one sentence. The section is now: one intro sentence, the
+table, one closing sentence pointing at `--fd`'s screenshot and the
+`docs/HOW_IT_WORKS.md` full-sample link.
+
+Two open questions from earlier rounds remain unanswered: whether to
+`git rm docs/example.gif` (still committed, still unreferenced from
+`README.md` since the `--fd` PNG swap), and whether the Known-limitations
+link should be restored to the README now that two separate edits have
+removed it from the main flow.
