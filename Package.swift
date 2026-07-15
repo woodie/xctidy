@@ -7,18 +7,12 @@ let package = Package(
         .executable(name: "xctidy", targets: ["xctidy"])
     ],
     dependencies: [
-        // Test-only. Lets one spec in XctidyKitTests be a *real*
-        // Quick describe/context/it spec, so `swift test` produces a
-        // genuine comma-flattened name for xctidy to disambiguate --
-        // not just a hand-built fixture string.
+        // Test-only: lets one spec be a *real* Quick describe/context/it spec so swift test produces a genuine comma-flattened name to disambiguate, not just a hand-built fixture. See docs/COMMENTS.md.
         .package(url: "https://github.com/Quick/Quick.git", from: "7.0.0"),
         .package(url: "https://github.com/Quick/Nimble.git", from: "13.0.0"),
     ],
     targets: [
-        // Core engine: parsing + rendering. Lives in its own target so the
-        // test target can `@testable import` it without the executable
-        // testability caveats that come with testing a target of type
-        // .executableTarget directly.
+        // Own target so the test target can @testable import it without .executableTarget's testability caveats. See docs/COMMENTS.md.
         .target(name: "XctidyKit"),
 
         .executableTarget(

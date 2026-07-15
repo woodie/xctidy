@@ -1,13 +1,6 @@
-// Pulled out of main.swift so the --version/-v detection is unit-testable
-// like the rest of the argument-handling surface in XctidyKit -- main.swift
-// itself is an executableTarget's top-level script code, which isn't
-// reachable from XctidyKitTests. See VersionFlagSpec.
+// Pulled out of main.swift so it's unit-testable -- main.swift's top-level script code isn't reachable from XctidyKitTests. See VersionFlagSpec and docs/COMMENTS.md.
 
-/// Whether `args` requests version reporting. Checked by main.swift before
-/// the stdin-reading loop starts -- it must short-circuit immediately rather
-/// than fall through to `readLine()`, which would otherwise hang waiting for
-/// piped input that will never arrive when someone just runs `xctidy
-/// --version` directly.
+/// Whether `args` requests version reporting; must be checked before the stdin-reading loop starts, or a bare `xctidy --version` would hang waiting for piped input that never arrives.
 public func wantsVersion(_ args: [String]) -> Bool {
     args.contains("--version") || args.contains("-v")
 }

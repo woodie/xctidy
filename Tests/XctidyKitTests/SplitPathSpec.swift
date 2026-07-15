@@ -2,10 +2,6 @@ import Quick
 import Nimble
 @testable import XctidyKit
 
-/// One QuickSpec class per file, one top-level `describe` per file, matching
-/// the file's subject (here, `splitPath` from `PathSplitting.swift`). See
-/// docs/DEVELOPMENT.md's "Test" section and the README's "Writing specs"
-/// section for why.
 final class SplitPathSpec: QuickSpec {
     override static func spec() {
         describe("splitPath") {
@@ -50,8 +46,7 @@ final class SplitPathSpec: QuickSpec {
                 }
 
                 it("falls back to the heuristic when the decomposition is ambiguous") {
-                    // Two different valid decompositions exist against this atom
-                    // set, so splitPath can't trust either and must fall back.
+                    // Deliberately ambiguous: two valid decompositions exist for this atom set, so splitPath must fall back to the heuristic.
                     let atoms: Set<String> = ["a", "b, c", "a, b", "c"]
                     let path = splitPath("a, b, c", atoms: atoms)
                     expect(path).to(equal(["a", "b", "c"]))  // heuristic: plain top-level split

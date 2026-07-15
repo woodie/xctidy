@@ -1,18 +1,8 @@
 import Foundation
 
 // MARK: - Dictionary-based comma disambiguation
-//
-// Builds a set of every known describe/context/it literal string by
-// scanning the project's spec files, then tries to decompose a flattened
-// Quick name into a `", "`-joined sequence of those known atoms. We only
-// need to know whether there is exactly one way to do that (unambiguous) or
-// not (fall back to a heuristic), so the search stops after finding 2
-// decompositions.
-//
-// Split out of Engine.swift -- this half is pure parsing/decomposition with
-// no dependency on Engine's rendering state, only on `Matchers.atomCall`
-// (still defined in Engine.swift, referenced here across files in the same
-// module -- no import needed).
+
+// Builds the atom set from spec files, then tries to decompose a flattened Quick name into a unique ", "-joined sequence of atoms, falling back to a heuristic split if ambiguous. See docs/COMMENTS.md.
 
 public func unescapeSwiftLiteral(_ raw: String) -> String {
     var out = ""
@@ -35,25 +25,7 @@ public func unescapeSwiftLiteral(_ raw: String) -> String {
     return out
 }
 
-/// Scans every `*.swift` file under `specsDir`, at any depth, for
-/// `describe("...")` / `context("...")` / `it("...")` string literals.
-///
-/// This used to be a non-recursive `contentsOfDirectory(atPath:)` glob,
-/// matching the original Python tool's `Path(specs_dir).glob("*.swift")`.
-/// That's wrong for the layout this tool's own README tells people to use:
-/// `xcodebuild test | xctidy Tests` passes the top-level `Tests` directory,
-/// but SwiftPM puts each target's specs one level below that, in
-/// `Tests/<ModuleName>Tests/*.swift` -- never directly inside `Tests/`
-/// itself. A non-recursive glob over `Tests/` finds nothing there, so
-/// `atoms` came back empty for the exact invocation the README recommends,
-/// silently dropping every name to the paren-depth-only heuristic in
-/// `splitPath` -- which mis-splits a bare prose comma with no parens around
-/// it (e.g. "decodes the name, size, time, and url" -- see
-/// `LoadKnownAtomsSpec.swift`'s "recurses into per-target subdirectories"
-/// case, added when this was diagnosed against a real project's
-/// `make test | xctidy` output). `subpathsOfDirectory(atPath:)` walks the
-/// whole tree, so `xctidy Tests` now actually finds atoms regardless of how
-/// many target subdirectories sit underneath it.
+/// Recursively scans every `*.swift` file under `specsDir` for describe/context/it string literals; must be recursive since SwiftPM nests each target's specs one level below `Tests/`. See docs/COMMENTS.md.
 public func loadKnownAtoms(specsDir: String) -> Set<String> {
     var atoms = Set<String>()
     let fmr = FileManager.default
@@ -110,9 +82,7 @@ func findDecompositions(_ name: String, atoms: Set<String>, limit: Int = 2) -> [
     return results
 }
 
-/// Splits only at top-level (paren-depth 0) `", "` -- used when the
-/// dictionary is empty or can't disambiguate. Keeps parenthetical asides
-/// like "(San Francisco to San Jose Diridon)" intact.
+/// Splits only at top-level (paren-depth 0) `", "`; keeps parenthetical asides like "(San Francisco to San Jose Diridon)" intact. See docs/COMMENTS.md.
 func splitHeuristic(_ name: String) -> [String] {
     var parts: [String] = []
     var current = ""

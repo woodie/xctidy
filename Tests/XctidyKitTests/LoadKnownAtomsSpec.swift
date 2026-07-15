@@ -5,9 +5,7 @@ import Foundation
 
 // MARK: - Fixtures
 
-// Real chains pulled from next-caltrain-swift's .swift files under Tests/, used to prove
-// both known comma-disambiguation edge cases: a parenthetical aside, and a
-// bare prose comma with no parens at all.
+// Real chains from next-caltrain-swift's Tests/, proving both disambiguation edge cases: a parenthetical aside and a bare prose comma with no parens. See docs/COMMENTS.md.
 private let goodTimesSwift = """
     describe("GoodTimes") {
         context("when 'today' is fixed via debugOverrideDotw") {
@@ -47,13 +45,6 @@ private func writeTempSpecsDir(_ files: [String: String]) -> String {
     return dir.path
 }
 
-/// One QuickSpec class per file, one top-level `describe` per file, matching
-/// the file's subject (here, `loadKnownAtoms` from `PathSplitting.swift`).
-/// This is the shape new specs in this project -- and in any project using
-/// xctidy -- should follow: it's what makes a single file isolatable by
-/// class name with `-only-testing:`, no hunting for what to focus. See
-/// docs/DEVELOPMENT.md's "Test" section and the README's "Writing specs"
-/// section for why.
 final class LoadKnownAtomsSpec: QuickSpec {
     override static func spec() {
         describe("loadKnownAtoms") {
@@ -85,17 +76,7 @@ final class LoadKnownAtomsSpec: QuickSpec {
             }
 
             it("recurses into per-target subdirectories like Tests/<ModuleName>Tests/") {
-                // The real-world layout this tool's own README tells people to
-                // point it at: `xctidy Tests` names the top-level Tests/
-                // directory, but SwiftPM nests each target's specs one level
-                // below that (Tests/FooKitTests/*.swift), never directly
-                // inside Tests/ itself. A non-recursive scan over the
-                // directory passed here would find zero atoms and silently
-                // fall back to the bare paren-depth heuristic for every name --
-                // exactly the bug seen against a real project's
-                // `make test | xctidy` output, where a comma-free-of-parens
-                // description like "decodes the name, size, time, and url"
-                // got split into four spurious nested levels.
+                // Regression test for the non-recursive-glob bug: SwiftPM nests specs one level under Tests/, e.g. Tests/FooKitTests/; see docs/COMMENTS.md (loadKnownAtoms).
                 let dir = writeTempSpecsDir([:])
                 let subdir = (dir as NSString).appendingPathComponent("FooKitTests")
                 try! FileManager.default.createDirectory(

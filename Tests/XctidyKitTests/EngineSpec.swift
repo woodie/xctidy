@@ -2,10 +2,6 @@ import Quick
 import Nimble
 @testable import XctidyKit
 
-/// One QuickSpec class per file, one top-level `describe` per file, matching
-/// the file's subject (here, the `Engine` class itself). See
-/// docs/DEVELOPMENT.md's "Test" section and the README's "Writing specs"
-/// section for why.
 final class EngineSpec: QuickSpec {
     override static func spec() {
         describe("Engine") {
@@ -40,8 +36,6 @@ final class EngineSpec: QuickSpec {
                     expect(output.components(separatedBy: "#routes(from:to:scheduleType:)\n").count - 1).to(
                         equal(1))
                     expect(output).to(contain("is not a transfer, since both endpoints are South County"))
-                    // Distinguishes the second (shorter) leaf from the first by its
-                    // own elapsed time, now that classic appends "(N seconds)".
                     expect(output).to(contain("is not a transfer (0.0019 seconds)"))
                 }
 
@@ -78,8 +72,6 @@ final class EngineSpec: QuickSpec {
                         "Test Case '-[NextCaltrainTests.CaltrainServiceSpec CaltrainService, #nextIndex(trips:minutes:), when given an empty trip list, returns nil]' skipped (0.0001 seconds)."
                     )
                     let output = engine.finish()
-                    // classic distinguishes skips by glyph + color, not text --
-                    // see "classic style" below for why there's no "(SKIPPED)".
                     expect(output).to(contain("⊘ returns nil (0.0001 seconds)"))
                 }
             }

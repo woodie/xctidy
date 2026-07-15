@@ -2,10 +2,6 @@ import Quick
 import Nimble
 @testable import XctidyKit
 
-/// One QuickSpec class per file, one top-level `describe` per file, matching
-/// the file's subject (here, `wantsVersion` from `VersionFlag.swift`). See
-/// docs/DEVELOPMENT.md's "Test" section and the README's "Writing specs"
-/// section for why.
 final class VersionFlagSpec: QuickSpec {
     override static func spec() {
         describe("wantsVersion") {

@@ -7,34 +7,7 @@ import XctidyKit
     import Darwin
 #endif
 
-// Usage: xcodebuild test ... | xctidy [-fd|-fs|--format documentation|--format spec] [path-to-Tests-dir]
-//
-// Reads raw xcodebuild output from stdin -- the same protocol xcpretty and
-// xcbeautify both parse -- and writes a nested tree to stdout. No
-// xcbeautify/xcpretty installation required; xctidy is a drop-in
-// replacement formatter, not a post-processor chained after either of them
-// (see docs/HOW_IT_WORKS.md, "Where this fits in a fastlane pipeline").
-//
-//   (no flag)  default: glyph + "name (N seconds)" per leaf ("✔"/"⊘"/"✖",
-//              colored), failures additionally keep "(FAILED - N)".
-//   -fd        an actual clone of real RSpec's `-fd`/documentation
-//              formatter's leaf rendering: plain colored name, no glyph, no
-//              per-test time; pending examples are yellow and say
-//              "(PENDING)". Long form: --format documentation.
-//   -fs        the more common look -- green "✔ name" (name dimmed gray) for
-//              passes, red "✗ name (FAILED - 1)" for failures, cyan
-//              "- name (SKIPPED)" for skips. Same convention as Mocha's
-//              default `spec` reporter or Jest's. Long form: --format spec.
-//   -v         print the version and exit (no stdin read). Long form:
-//              --version. Bare number, no "xctidy" prefix or "v" --
-//              matches xcbeautify's `--version` output style.
-//
-// All three styles end with the exact same run-results footer, lifted
-// verbatim from real xcbeautify -- a green "Test Succeeded"/red
-// "Test Failed" headline, then "Tests Passed: X failed, Y skipped, Z total
-// (N seconds)". Neither -fd nor -fs additionally prints RSpec's/Mocha's own
-// native run summary on top of that -- see docs/HOW_IT_WORKS.md,
-// "Output styles".
+// Usage: xcodebuild test ... | xctidy [-fd|-fs|--format documentation|--format spec] [path-to-Tests-dir] -- see docs/HOW_IT_WORKS.md's "Output styles" and docs/COMMENTS.md for the full flag reference.
 
 var style: RenderStyle = .classic
 var specsDir = "."
@@ -50,9 +23,7 @@ func parseStyle(_ raw: String) -> RenderStyle? {
 
 var args = Array(CommandLine.arguments.dropFirst())
 
-// Checked before the stdin-reading loop below, not as a case in the switch --
-// see wantsVersion's doc comment (XctidyKit/VersionFlag.swift) for why this
-// must short-circuit immediately rather than fall through to readLine().
+// Checked before the stdin-reading loop, not as a switch case; see wantsVersion's doc comment for why.
 if wantsVersion(args) {
     print(xctidyVersion)
     exit(0)
