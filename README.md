@@ -88,17 +88,28 @@ reflects what you actually installed, not a hand-maintained constant.
 
 ## Output styles
 
-Three named styles, each matching a convention from a familiar test runner.
-All three end with the same xcbeautify-style footer.
+Four named styles, each matching a convention from a familiar test runner.
+The first three end with the same xcbeautify-style footer; `-fv` ends with
+Vitest's own footer shape instead.
 
 | Flag | Convention | Look |
 |---|---|---|
 |   | Our base formatter | Glyph + `name (N seconds)`, failures add `(FAILED - N)` |
 | -fd | RSpec's doc format | Plain colored name, yellow `(PENDING)` for skips |
 | -fs | Mocha's spec format | Green `✔` + gray name, red `✗ name (FAILED - N)` |
+| -fv | Vitest's own tree | Green `✓ name`, two-toned green `2ms`, red `× name`, dim gray `↓ name` |
 
-The screenshot above is `-fd`. Full samples of all three styles:
-[docs/HOW_IT_WORKS.md](docs/HOW_IT_WORKS.md#output-styles).
+`-fv` is [`gorderly`](https://github.com/woodie/gorderly)'s `-fv` counterpart
+for the XCTest side -- same glyphs, same millisecond conversion, same
+`Tests`/`Duration` footer shape. It currently omits Vitest's `Test Files`
+line: XCTest's own Test Suite nesting (a per-class suite wrapped in an "All
+tests"/"Selected tests" aggregate suite) hasn't been verified against real
+`xcodebuild` output, so a suite-level pass/fail count risks over-counting
+the wrapper suites as if they were their own files. `gorderly`'s equivalent
+(one line per Go package) had no such ambiguity.
+
+The screenshot above is `-fd`. Full samples of all three xcbeautify-style
+styles: [docs/HOW_IT_WORKS.md](docs/HOW_IT_WORKS.md#output-styles).
 
 ## Writing specs
 

@@ -7,7 +7,7 @@ import XctidyKit
     import Darwin
 #endif
 
-// Usage: xcodebuild test ... | xctidy [-fd|-fs|--format documentation|--format spec] [path-to-Tests-dir] -- see docs/HOW_IT_WORKS.md's "Output styles" and docs/COMMENTS.md for the full flag reference.
+// Usage: xcodebuild test ... | xctidy [-fd|-fs|-fv|--format documentation|--format spec|--format vitest] [path-to-Tests-dir] -- see docs/HOW_IT_WORKS.md's "Output styles" and docs/COMMENTS.md for the full flag reference.
 
 var style: RenderStyle = .classic
 var specsDir = "."
@@ -17,6 +17,7 @@ func parseStyle(_ raw: String) -> RenderStyle? {
     switch raw {
     case "documentation": return .doc
     case "spec": return .spec
+    case "vitest": return .vitest
     default: return nil
     }
 }
@@ -36,12 +37,14 @@ while i < args.count {
         style = .doc
     case "-fs":
         style = .spec
+    case "-fv":
+        style = .vitest
     case "--format":
         guard i + 1 < args.count, let parsed = parseStyle(args[i + 1]) else {
             let got = i + 1 < args.count ? args[i + 1] : "<missing>"
             FileHandle.standardError.write(
                 Data(
-                    "xctidy: unknown --format '\(got)' (expected 'documentation' or 'spec')\n"
+                    "xctidy: unknown --format '\(got)' (expected 'documentation', 'spec', or 'vitest')\n"
                         .utf8))
             exit(1)
         }

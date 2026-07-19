@@ -232,6 +232,68 @@ final class EngineSpec: QuickSpec {
                 }
             }
 
+            context("vitest style (-fv)") {
+                it("renders a passed case with Vitest's own checkmark and millisecond timing") {
+                    let engine = Engine(atoms: [], tty: false, style: .vitest)
+                    engine.feedLine("Test Case '-[Suite foo]' passed (0.002 seconds).")
+                    expect(engine.finish()).to(contain("✓ foo 2ms"))
+                }
+
+                it("renders a failed case with Vitest's cross, no inline FAILED marker") {
+                    let engine = Engine(atoms: [], tty: false, style: .vitest)
+                    engine.feedLine("/path/to/Foo.swift:1: error: -[Suite foo] : it broke")
+                    engine.feedLine("Test Case '-[Suite foo]' failed (0.002 seconds).")
+                    let output = engine.finish()
+                    expect(output).to(contain("× foo 2ms"))
+                    expect(output).toNot(contain("FAILED"))
+                    // The trailing Failures section still numbers it, even without an inline marker.
+                    expect(output).to(contain("1) foo"))
+                    expect(engine.failures.count).to(equal(1))
+                }
+
+                it("renders a skipped case with a dim down-arrow and no timing") {
+                    let engine = Engine(atoms: [], tty: false, style: .vitest)
+                    engine.feedLine("Test Case '-[Suite foo]' skipped (0.001 seconds).")
+                    let output = engine.finish()
+                    expect(output).to(contain("↓ foo"))
+                    expect(output).toNot(contain("0.001"))
+                }
+
+                it("switches from milliseconds to seconds above the one-second threshold") {
+                    let engine = Engine(atoms: [], tty: false, style: .vitest)
+                    engine.feedLine("Test Case '-[Suite foo]' passed (1.5 seconds).")
+                    expect(engine.finish()).to(contain("✓ foo 1.50s"))
+                }
+
+                it("colors the millisecond number and unit two different shades of green when a TTY") {
+                    let engine = Engine(atoms: [], tty: true, style: .vitest)
+                    engine.feedLine("Test Case '-[Suite foo]' passed (0.002 seconds).")
+                    let output = engine.finish()
+                    expect(output).to(contain("\u{1B}[32m2\u{1B}[0m"))
+                    expect(output).to(contain("\u{1B}[92mms\u{1B}[0m"))
+                }
+
+                it("ends with a Vitest-shaped Tests/Duration footer, not the xcbeautify one") {
+                    let engine = Engine(atoms: [], tty: false, style: .vitest)
+                    engine.feedLine("Test Case '-[Suite foo]' passed (0.002 seconds).")
+                    engine.feedLine("Test Case '-[Suite bar]' skipped (0.001 seconds).")
+                    engine.feedLine(" Executed 2 tests, with 0 failures (0 unexpected) in 0.026 (0.030) seconds")
+                    let output = engine.finish()
+                    expect(output).toNot(contain("Test Succeeded"))
+                    expect(output).toNot(contain("Tests Passed:"))
+                    expect(output).to(contain("Tests  1 passed | 1 skipped (2)"))
+                    expect(output).to(contain("Duration  26ms"))
+                }
+
+                it("does not emit a Test Files line -- suite-level counting is deferred, see Engine.swift's emitVitestFooter") {
+                    let engine = Engine(atoms: [], tty: false, style: .vitest)
+                    engine.feedLine("Test Suite 'FooSpec' started at 2026-06-22 10:00:00.000.")
+                    engine.feedLine("Test Case '-[Suite foo]' passed (0.002 seconds).")
+                    engine.feedLine(" Executed 1 test, with 0 failures (0 unexpected) in 0.002 (0.003) seconds")
+                    expect(engine.finish()).toNot(contain("Test Files"))
+                }
+            }
+
             context("closing footer is identical across all three styles") {
                 it("ends every style with byte-for-byte the same 'Test Succeeded'/'Tests Passed' footer") {
                     func run(_ style: RenderStyle) -> String {

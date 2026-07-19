@@ -41,16 +41,18 @@ extension NSTextCheckingResult {
 enum AnsiColor: String {
     case red = "31"
     case green = "32"
+    case brightGreen = "92"
     case yellow = "33"
     case cyan = "36"
     case gray = "90"
 }
 
-/// Controls per-leaf label rendering: `.classic` (default, glyph + time), `.doc` (RSpec `-fd` clone), `.spec` (Mocha/Jest clone) -- all three share one identical xcbeautify-style closing footer. See docs/COMMENTS.md.
+/// Controls per-leaf label rendering: `.classic` (default, glyph + time), `.doc` (RSpec `-fd` clone), `.spec` (Mocha/Jest clone), `.vitest` (Vitest's own tree clone, gorderly's `-fv` counterpart) -- the first three share one identical xcbeautify-style closing footer; `.vitest` closes with Vitest's own Tests/Duration shape instead. See docs/COMMENTS.md.
 public enum RenderStyle: Equatable {
     case classic
     case doc
     case spec
+    case vitest
 }
 
 // MARK: - Failures
@@ -168,6 +170,16 @@ public final class Engine {
         return " (\(colorize(color, time)) seconds)"
     }
 
+    // vitestDurationParts mirrors gorderly's formatVitestDurationParts, itself mirroring Vitest's own formatTime (utils.ts): whole milliseconds under 1000ms, seconds to two decimals at or above -- same seconds-in, (number, unit)-out conversion gorderly does for `go test -v`'s equivalent timing.
+    private func vitestDurationParts(_ time: String?) -> (number: String, unit: String)? {
+        guard let time, let seconds = Double(time) else { return nil }
+        let ms = seconds * 1000
+        if ms > 1000 {
+            return (String(format: "%.2f", ms / 1000), "s")
+        }
+        return (String(Int(ms.rounded())), "ms")
+    }
+
     private func labelForPassed(name: String, time: String?) -> String {
         switch style {
         case .classic:
@@ -176,6 +188,12 @@ public final class Engine {
             return colorize(.green, name)
         case .spec:
             return colorize(.green, "✔") + " " + colorize(.gray, name)
+        case .vitest:
+            // Name stays uncolored (not gray) and the duration is two-toned (plain green number, lighter brightGreen unit) -- matches a real `vitest run`, confirmed rather than assumed. See gorderly's render.go.
+            guard let parts = vitestDurationParts(time) else {
+                return "\(colorize(.green, "✓")) \(name)"
+            }
+            return "\(colorize(.green, "✓")) \(name) \(colorize(.green, parts.number))\(colorize(.brightGreen, parts.unit))"
         }
     }
 
@@ -189,6 +207,9 @@ public final class Engine {
             return colorize(.yellow, "\(name) (PENDING)")
         case .spec:
             return colorize(.cyan, "- \(name) (SKIPPED)")
+        case .vitest:
+            // Vitest's own skipped glyph is a dim gray ↓, no time shown -- skipped tests never ran, so there's nothing to time.
+            return colorize(.gray, "↓ \(name)")
         }
     }
 
@@ -210,6 +231,12 @@ public final class Engine {
             return colorize(.red, "\(name) (FAILED - \(num))")
         case .spec:
             return colorize(.red, "✗ \(name) (FAILED - \(num))")
+        case .vitest:
+            // No inline "(FAILED - N)" -- Vitest's own tree doesn't number failures inline either; the trailing Failures: section still cross-references by number, same as gorderly's -fv.
+            guard let parts = vitestDurationParts(time) else {
+                return colorize(.red, "× \(name)")
+            }
+            return colorize(.red, "× \(name) \(parts.number)\(parts.unit)")
         }
     }
 
@@ -229,15 +256,42 @@ public final class Engine {
         if exampleCount > 0 {
             // Gated on exampleCount > 0 so noise-only input still finishes as just "\n", matching xcodebuild's own behavior of only printing "** TEST SUCCEEDED **" after a real test run. See docs/COMMENTS.md.
             emit()
-            let succeeded = failures.isEmpty
-            let color: AnsiColor = succeeded ? .green : .red
-            emit(colorize(color, succeeded ? "Test Succeeded" : "Test Failed"))
-            var summary = "Tests Passed: \(failures.count) failed, \(pendingCount) skipped, \(exampleCount) total"
-            if let t = lastTestTimeText {
-                summary += " (\(t) seconds)"
+            if style == .vitest {
+                emitVitestFooter()
+            } else {
+                let succeeded = failures.isEmpty
+                let color: AnsiColor = succeeded ? .green : .red
+                emit(colorize(color, succeeded ? "Test Succeeded" : "Test Failed"))
+                var summary = "Tests Passed: \(failures.count) failed, \(pendingCount) skipped, \(exampleCount) total"
+                if let t = lastTestTimeText {
+                    summary += " (\(t) seconds)"
+                }
+                emit(colorize(color, summary))
             }
-            emit(colorize(color, summary))
         }
         return out.joined(separator: "\n") + "\n"
+    }
+
+    // emitVitestFooter mirrors gorderly's vitestSummaryLine (label right-justified to 11 columns, then "N failed | M passed | K skipped (total)"), but intentionally omits Vitest's "Test Files" line -- XCTest's own Test Suite nesting (a per-class suite wrapped in an "All tests"/"Selected tests" aggregate) isn't verified against real xcodebuild output here, so a suite-level count risks over-counting wrapper suites as their own files; gorderly's one-line-per-Go-package had no such ambiguity. Fill this in once checked against a real xcodebuild run.
+    private func emitVitestFooter() {
+        let passed = exampleCount - failures.count - pendingCount
+        emit(vitestSummaryLine("Tests", failed: failures.count, passed: passed, skipped: pendingCount, total: exampleCount))
+        if let parts = vitestDurationParts(lastTestTimeText) {
+            emit("\(padLabel("Duration"))  \(parts.number)\(parts.unit)")
+        }
+    }
+
+    // padLabel right-justifies to 11 columns, matching Vitest's own padSummaryTitle (str.padStart(11)) -- confirmed against Vitest's reporter source, not guessed. See gorderly's vitestSummaryLine.
+    private func padLabel(_ label: String) -> String {
+        String(repeating: " ", count: max(0, 11 - label.count)) + label
+    }
+
+    private func vitestSummaryLine(_ label: String, failed: Int, passed: Int, skipped: Int, total: Int) -> String {
+        var parts: [String] = []
+        if failed > 0 { parts.append(colorize(.red, "\(failed) failed")) }
+        if passed > 0 { parts.append(colorize(.green, "\(passed) passed")) }
+        if skipped > 0 { parts.append(colorize(.gray, "\(skipped) skipped")) }
+        if parts.isEmpty { parts.append("0 passed") }
+        return "\(padLabel(label))  \(parts.joined(separator: " | ")) (\(total))"
     }
 }

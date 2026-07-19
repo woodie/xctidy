@@ -568,3 +568,46 @@ the user's Mac to confirm, and then a real
 `make test | xctidy Tests` (or `swift test 2>&1 | xctidy Tests`, run from
 `~/workspace/zouk` with the path adjusted to that repo's `Tests` directory)
 against `zouk` to confirm the original bare-prose-comma symptom is gone.
+
+## Later session: `-fv`, ported from `gorderly`
+
+`gorderly` (the Go equivalent of this tool, `~/workspace/gorderly`) added
+a `-fv`/`--format vitest` style matching [Vitest](https://vitest.dev)'s
+own terminal conventions -- built after checking Vitest's actual reporter
+source (`packages/vitest/src/node/reporters/renderers/{utils,figures}.ts`)
+rather than guessing from its docs: `✓`/`×`/`↓` glyphs (the fail glyph is
+a multiplication sign, not `✗`), a two-toned green duration (plain green
+number, a separate lighter `brightGreen`/92 for the `ms`/`s` unit), and a
+footer with labels right-justified to 11 columns. The user asked for the
+same style here.
+
+Added `RenderStyle.vitest` to `Engine.swift`, matching `gorderly`'s glyph
+choices and duration formatting exactly (`vitestDurationParts` mirrors
+`gorderly`'s `formatVitestDurationParts`: whole ms under 1000ms, seconds
+to two decimals at or above), plus `-fv`/`--format vitest` in
+`main.swift`. One real gap, left deliberately unfilled: Vitest's `Test
+Files` line isn't emitted. `gorderly`'s equivalent counts cleanly because
+one `PackageResult` per Go package was already unambiguous; XCTest's own
+`Test Suite` output nests a per-class suite inside "All tests"/"Selected
+tests" aggregate wrapper suites, and that nesting isn't verified against
+real `xcodebuild` output here (no Swift/Xcode toolchain in this sandbox,
+and no sample output for it in this repo's own test fixtures) -- counting
+every `Test Suite ... passed/failed` line would likely over-count the
+wrapper suites as if they were their own files. `emitVitestFooter` in
+`Engine.swift` has a comment marking this as a follow-up for whoever
+checks it against a real `xcodebuild` run.
+
+New coverage in `EngineSpec.swift` (`context("vitest style (-fv)")`):
+glyphs for pass/fail/skip, the ms-to-seconds threshold, TTY two-tone
+coloring, the footer shape, and an explicit test confirming the `Test
+Files` line's absence (so the omission reads as a documented decision,
+not an oversight). Also caught and fixed one real bug along the way: the
+new comments were initially written wrapped across multiple `//` lines,
+matching `gorderly`'s house style -- but this repo's own convention is
+one long single-line comment (using `--` as an internal separator, no
+wrapping), confirmed by every pre-existing comment in `Engine.swift`.
+Collapsed all of the new ones to match.
+
+Made by inspection only, same sandbox limitation as every round above --
+confirmed on the user's own Mac afterward: `make test` (all 46 specs
+pass, including the new `-fv` block) and `make install` both succeeded.

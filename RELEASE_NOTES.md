@@ -1,16 +1,13 @@
-## Fixes
+## Highlights
 
-- Comma-disambiguation now actually works for real SwiftPM projects.
-  `loadKnownAtoms` scanned only the immediate contents of the directory it
-  was given (`contentsOfDirectory(atPath:)`), but SwiftPM nests each
-  target's specs one level deeper (`Tests/<ModuleName>Tests/*.swift`) --
-  exactly the layout `xctidy Tests` (the form this tool's own README
-  recommends) points at. The scan found nothing there, so the
-  comma/no-comma dictionary came back empty and every name silently fell
-  back to a heuristic that can't tell a nesting boundary from a bare prose
-  comma -- `it("decodes the name, size, time, and url")` rendered as four
-  spurious nested levels instead of one leaf. `loadKnownAtoms` now walks
-  the whole tree (`subpathsOfDirectory(atPath:)`), so it finds atoms
-  regardless of how many target subdirectories sit underneath the
-  directory you pass it. Added a regression test covering the nested
-  layout.
+- Add `-fv`/`--format vitest`: renders [Vitest](https://vitest.dev)'s own
+  terminal conventions -- `✓`/`×`/`↓` glyphs, a two-toned green duration
+  (plain green number, lighter unit), and a `Tests`/`Duration` footer with
+  labels right-justified to 11 columns. Ported from `gorderly` (the Go
+  equivalent of this tool), which verified the glyphs and formatting
+  against Vitest's actual reporter source rather than its docs.
+- Known gap: no `Test Files` line. XCTest's own `Test Suite` nesting
+  ("All tests"/"Selected tests" wrapper suites around each per-class
+  suite) isn't verified against real `xcodebuild` output yet, so a
+  suite-level count risks over-counting wrapper suites as their own
+  files. Left for a future release once checked against a real run.
