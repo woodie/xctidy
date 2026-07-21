@@ -193,7 +193,9 @@ public final class Engine {
             guard let parts = vitestDurationParts(time) else {
                 return "\(colorize(.green, "✓")) \(name)"
             }
-            return "\(colorize(.green, "✓")) \(name) \(colorize(.green, parts.number))\(colorize(.brightGreen, parts.unit))"
+            let number = colorize(.green, parts.number)
+            let unit = colorize(.brightGreen, parts.unit)
+            return "\(colorize(.green, "✓")) \(name) \(number)\(unit)"
         }
     }
 
@@ -275,7 +277,8 @@ public final class Engine {
     // emitVitestFooter mirrors gorderly's vitestSummaryLine (label right-justified to 11 columns, then "N failed | M passed | K skipped (total)"), but intentionally omits Vitest's "Test Files" line -- XCTest's own Test Suite nesting (a per-class suite wrapped in an "All tests"/"Selected tests" aggregate) isn't verified against real xcodebuild output here, so a suite-level count risks over-counting wrapper suites as their own files; gorderly's one-line-per-Go-package had no such ambiguity. Fill this in once checked against a real xcodebuild run.
     private func emitVitestFooter() {
         let passed = exampleCount - failures.count - pendingCount
-        emit(vitestSummaryLine("Tests", failed: failures.count, passed: passed, skipped: pendingCount, total: exampleCount))
+        emit(vitestSummaryLine(
+            "Tests", failed: failures.count, passed: passed, skipped: pendingCount, total: exampleCount))
         if let parts = vitestDurationParts(lastTestTimeText) {
             emit("\(padLabel("Duration"))  \(parts.number)\(parts.unit)")
         }

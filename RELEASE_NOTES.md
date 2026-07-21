@@ -1,13 +1,10 @@
-## Highlights
+## Fix
 
-- Add `-fv`/`--format vitest`: renders [Vitest](https://vitest.dev)'s own
-  terminal conventions -- `✓`/`×`/`↓` glyphs, a two-toned green duration
-  (plain green number, lighter unit), and a `Tests`/`Duration` footer with
-  labels right-justified to 11 columns. Ported from `gorderly` (the Go
-  equivalent of this tool), which verified the glyphs and formatting
-  against Vitest's actual reporter source rather than its docs.
-- Known gap: no `Test Files` line. XCTest's own `Test Suite` nesting
-  ("All tests"/"Selected tests" wrapper suites around each per-class
-  suite) isn't verified against real `xcodebuild` output yet, so a
-  suite-level count risks over-counting wrapper suites as their own
-  files. Left for a future release once checked against a real run.
+- Two lines in `Engine.swift`'s `-fv` code (added in v0.3.0) exceeded
+  SwiftLint's 120-character warning threshold -- harmless under normal
+  `swiftlint lint`, but CI's `make lint` runs `--strict`, which escalates
+  warnings to build-failing errors. Wrapped both onto multiple lines
+  (`labelForPassed`'s `.vitest` case, `emitVitestFooter`'s summary-line
+  call) with no behavior change. `Tests/.swiftlint.yml` already disables
+  `line_length` for spec fixtures, so this only affected real source under
+  `Sources/`.
