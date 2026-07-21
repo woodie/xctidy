@@ -648,3 +648,42 @@ bump with zero code diff has nothing for `git describe`/`RELEASE_NOTES.md`
 to describe, and this account's own tagging convention ("verify before
 tagging, every time") is about confirming a tag points at real, intended
 changes -- not about tagging on a schedule regardless of content.
+
+## Correction: the audit above was premature -- real CI found two gaps
+
+"Nothing in this repo needed to change" didn't survive contact with a real
+CI run. This docs-only commit was pushed, triggering GitHub Actions, which
+came back red -- twice, in two separate rounds -- on `--strict` SwiftLint
+violations already latent in `Engine.swift`'s `-fv` code from the
+`gorderly`-parity session before this one (`4d7084d`, "Add -fv/--format
+vitest style, ported from gorderly"), just never caught because CI hadn't
+run against that code since the `.swiftlint.yml` thresholds were set:
+
+1. Two lines exceeded the 120-char `line_length` warning threshold
+   (`labelForPassed`'s `.vitest` case, `emitVitestFooter`'s
+   `vitestSummaryLine` call) -- harmless under plain `swiftlint lint`, but
+   `--strict` escalates warnings to build-failing errors. Wrapped both
+   onto multiple lines, no behavior change. Tagged `v0.3.1`.
+2. `vitestDurationParts`'s local `ms` variable violated
+   `identifier_name`'s minimum length -- `.swiftlint.yml`'s
+   `identifier_name.excluded` list only covers specific pre-reviewed
+   single-letter names (`i`, `m`, `n`, `a`, `b`, `f`, `r`, `t`), and `ms`
+   wasn't on it. Renamed to `milliseconds` at all three use sites rather
+   than adding another exclusion -- no behavior change. Tagged `v0.3.2`.
+
+Both fixes made by inspection only (same no-toolchain limitation as
+everywhere else in this account), confirmed green by the user's own CI
+runs after each push. `docs/RELEASE_NOTES.md` (moved out of the repo root
+into `docs/` this same round, matching `gorderly`'s `docs/releases/`
+convention -- no content change, `git mv` only) consolidates both fixes
+into one note, since `v0.3.1` was superseded within minutes by `v0.3.2`
+and never really shipped to anyone as its own release; the `gh release
+create` handoff targets `v0.3.2` alone.
+
+Generalized into `~/workspace/woodie/docs/COWORK.md`'s "Tagging releases"
+section: a repo's own `check`/`lint` target (or CI) is the only real
+verification the sandbox can rely on, since it has no toolchain of its
+own here -- an audit's "nothing needed to change" conclusion is only as
+good as what it was actually checked against, and a side-by-side source
+diff against a sibling repo is not the same thing as a real lint/build
+run.
