@@ -611,3 +611,40 @@ Collapsed all of the new ones to match.
 Made by inspection only, same sandbox limitation as every round above --
 confirmed on the user's own Mac afterward: `make test` (all 46 specs
 pass, including the new `-fv` block) and `make install` both succeeded.
+
+## Audit: parity check against `gorderly` found no changes needed here
+
+After fixing a real coloring bug in `gorderly`'s classic style (its
+passing-leaf line was colored solid green end to end, where this repo's
+own `labelForPassed` already only colors the glyph and the elapsed-time
+number, leaving the name plain -- see `gorderly`'s `docs/COWORK.md`), the
+user asked for a full parity sweep between the two tools. Comparing
+`Engine.swift`'s `labelForPassed`/`labelForSkipped`/`labelForFailed` and
+`main.swift`'s `wantsVersion`/`isatty` check against `gorderly`'s
+`render.go`/`main.go` line by line turned up six real gaps -- all of them
+on `gorderly`'s side, none here:
+
+1. Classic style missing the `(FAILED - N)` cross-reference on failed
+   leaves.
+2. Classic fail/skip lines colored solid (whole line) instead of
+   glyph-plus-time-only, unlike this repo's own `.classic` style.
+3. `-fd`'s pending label colored cyan instead of yellow (real RSpec `-fd`
+   convention, already correct here in `.doc`).
+4. `-fs`'s fail/skip leaves using different glyphs (`✖`/`○` instead of
+   `✗`/`-`) and missing the `(FAILED - N)`/`(SKIPPED)` text this repo's
+   `.spec` style already includes.
+5. No `--version`/`-v` flag at all (this repo has had one since
+   `VersionFlag.swift`/`wantsVersion`).
+6. No TTY autodetection for color (`NO_COLOR` only, no `isatty`-equivalent
+   check), unlike this repo's own `isatty(fileno(stdout))` check in
+   `main.swift`.
+
+All six were fixed in `gorderly` (tagged `v0.3.0` there; see its
+`docs/releases/v0.3.0.md`). Nothing in this repo needed to change --
+`Engine.swift` and `main.swift` already had the correct behavior on every
+one of these points, which is what made them usable as the reference to
+diff `gorderly` against in the first place. No new tag cut here: a version
+bump with zero code diff has nothing for `git describe`/`RELEASE_NOTES.md`
+to describe, and this account's own tagging convention ("verify before
+tagging, every time") is about confirming a tag points at real, intended
+changes -- not about tagging on a schedule regardless of content.
