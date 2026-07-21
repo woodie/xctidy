@@ -173,11 +173,11 @@ public final class Engine {
     // vitestDurationParts mirrors gorderly's formatVitestDurationParts, itself mirroring Vitest's own formatTime (utils.ts): whole milliseconds under 1000ms, seconds to two decimals at or above -- same seconds-in, (number, unit)-out conversion gorderly does for `go test -v`'s equivalent timing.
     private func vitestDurationParts(_ time: String?) -> (number: String, unit: String)? {
         guard let time, let seconds = Double(time) else { return nil }
-        let ms = seconds * 1000
-        if ms > 1000 {
-            return (String(format: "%.2f", ms / 1000), "s")
+        let milliseconds = seconds * 1000
+        if milliseconds > 1000 {
+            return (String(format: "%.2f", milliseconds / 1000), "s")
         }
-        return (String(Int(ms.rounded())), "ms")
+        return (String(Int(milliseconds.rounded())), "ms")
     }
 
     private func labelForPassed(name: String, time: String?) -> String {

@@ -1,10 +1,8 @@
 ## Fix
 
-- Two lines in `Engine.swift`'s `-fv` code (added in v0.3.0) exceeded
-  SwiftLint's 120-character warning threshold -- harmless under normal
-  `swiftlint lint`, but CI's `make lint` runs `--strict`, which escalates
-  warnings to build-failing errors. Wrapped both onto multiple lines
-  (`labelForPassed`'s `.vitest` case, `emitVitestFooter`'s summary-line
-  call) with no behavior change. `Tests/.swiftlint.yml` already disables
-  `line_length` for spec fixtures, so this only affected real source under
-  `Sources/`.
+- `vitestDurationParts`'s local `ms` variable (added in v0.3.0's `-fv`
+  code) violated `identifier_name`'s minimum length under `--strict`.
+  `.swiftlint.yml` only excludes single-letter names for pre-reviewed
+  cases (loop counters, regex-match locals) -- `ms` wasn't one of them, and
+  two characters is short even by that list's standard. Renamed to
+  `milliseconds` rather than adding another exclusion; no behavior change.
