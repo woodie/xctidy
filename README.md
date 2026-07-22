@@ -35,8 +35,13 @@ make install
 xcodebuild test [flags] | xctidy Tests
 ```
 
-If you want `xctidy` to exit with the same status code as `xcodebuild` (e.g.
-on CI):
+`xctidy` itself exits 1 if any test case it rendered failed, so a plain
+`... | xctidy Tests` already reports a real test failure correctly. It
+can't know about a failure further upstream, though -- if `xcodebuild`/
+`swift test` itself fails before any test case ever runs (a build error,
+a crashed test host), that never produces a "Test Case ... failed" line
+for `xctidy` to see. For that case, also propagate the upstream tool's
+own exit status (e.g. on CI):
 
 ```bash
 set -o pipefail && xcodebuild test [flags] | xctidy Tests
@@ -133,21 +138,16 @@ available to sub-tests, mocking and stubbing -- see
 
 ## Development
 
-```bash
-swift build
-swift test
+```
+make build    # swift build --configuration release
+make install  # builds, then copies the binary to $(PREFIX)/bin (default /usr/local)
+make test     # verbose, dogfoods xctidy on its own suite (swift test | xctidy)
+make lint     # swiftlint lint --strict
+make check    # terse: silent on success, full log on failure
 ```
 
 See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for project layout, how to
-add a render style, and the release process. See
+add a render style, the release process, and the rest of the Makefile
+(`uninstall`, `clean`, `xcode`). See
 [docs/HOW_IT_WORKS.md](docs/HOW_IT_WORKS.md) for how the comma
 disambiguation and failure folding actually work, and for known limitations.
-
-## Contributing
-
-Please send a PR! [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) covers getting
-set up.
-
-## License
-
-MIT, see [LICENSE](LICENSE).

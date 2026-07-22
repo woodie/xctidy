@@ -1,5 +1,11 @@
 PRODUCT_NAME=xctidy
 
+# `test`'s recipe needs `set -o pipefail` (POSIX dash doesn't support it) --
+# harmless to pin here since this project is macOS-only anyway (see
+# .github/workflows/makefile.yml: XCTest parsing only ever runs against a
+# real Xcode/macOS build).
+SHELL:=/bin/bash
+
 PREFIX?=/usr/local
 
 CP=/bin/cp -f
@@ -42,7 +48,8 @@ build: version
 
 .PHONY: test
 test:
-	$(SWIFT) test
+	$(SWIFT) build --product $(PRODUCT_NAME)
+	set -o pipefail; $(SWIFT) test 2>&1 | "$$($(SWIFT) build --show-bin-path)/$(PRODUCT_NAME)" Tests/XctidyKitTests
 
 .PHONY: lint
 lint:
@@ -66,3 +73,15 @@ clean:
 .PHONY: xcode
 xcode: version
 	open Package.swift
+
+.PHONY: check
+check:
+	@LOG=$$(mktemp); \
+  if $(SWIFT) test > "$$LOG" 2>&1; then \
+    echo "PASS"; \
+  else \
+    cat "$$LOG"; \
+    rm -f "$$LOG"; \
+    exit 1; \
+  fi; \
+  rm -f "$$LOG"

@@ -39,6 +39,20 @@ README's "Build from source" install path.
 swift test
 ```
 
+`make test` wraps this: it builds a debug `xctidy` binary first, then
+pipes `swift test`'s own output through it (`2>&1`, since XCTest's
+`Test Suite`/`Test Case` lines go to stderr under `swift test`, not
+stdout -- see the README's Usage section), so the suite dogfoods xctidy's
+own rendering on every run, the same way `gorderly`'s `test: go run .
+-fd ./...` self-hosts on the Go side. `set -o pipefail` in the recipe
+(this Makefile pins `SHELL:=/bin/bash` for it) makes sure a build failure
+upstream of any test case still fails `make test`, on top of `xctidy`'s
+own exit code now reflecting whatever failures it actually rendered (see
+`docs/COMMENTS.md`'s entry on `main.swift`'s final `exit(...)` call for
+the fuller history and why both layers matter). Reach for plain
+`swift test` above instead when you just want the raw XCTest output with
+nothing in between.
+
 The test target (`XctidyKitTests`) depends on
 [Quick](https://github.com/Quick/Quick) and
 [Nimble](https://github.com/Quick/Nimble) as test-only dependencies (see

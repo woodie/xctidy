@@ -312,6 +312,35 @@ a case inside the flag-parsing switch -- see `wantsVersion`'s doc comment
 (`XctidyKit/VersionFlag.swift`) for why this must short-circuit
 immediately rather than fall through to `readLine()`.
 
+### Final `exit(engine.failures.isEmpty ? 0 : 1)`
+Kept a short comment in place explaining the mirror to `gorderly`'s
+`main.go`.
+
+Full history: before this, `main.swift` always exited 0 here regardless
+of `engine.failures` -- the only non-zero exits were flag-parsing errors
+(an unrecognized `--format` value). That meant a bare
+`xcodebuild test | xctidy Tests` (no `set -o pipefail`) reported success
+even when real tests failed, since the pipeline's exit status defaulted
+to the last command's (xctidy's, always 0). The README already warned
+about this for `xcodebuild`/`swift test` piping, but the fix was always
+on the caller (`set -o pipefail`), never in `xctidy` itself. Found while
+reviewing whether xctidy's own `test` Makefile target could safely pipe
+`swift test` through `xctidy` for prettier dogfooded output the way
+`gorderly`'s `test: go run . -fd ./...` does -- `gorderly`'s `main.go`
+already does the equivalent (`if failed > 0 { return 1 }`), which is
+exactly why gorderly's self-piped target needed no such workaround.
+Bringing xctidy in line with that fixes the general case, not just the
+Makefile: every documented usage (README, fastlane's
+`xcodebuild_formatter`) now gets a meaningful exit code by default.
+
+This isn't a full substitute for `set -o pipefail`, though: it only
+reflects failures `engine` actually saw as rendered test-case lines. If
+`xcodebuild`/`swift test` fails before any test runs at all (a build
+error, a crashed test host), no "Test Case ... failed" line is ever fed
+in, so `engine.failures` stays empty even though the run genuinely
+failed. `set -o pipefail` (or checking `${PIPESTATUS[0]}`) is still the
+only way to catch that upstream case -- see the README's Usage section.
+
 ## Sources/xctidy/Version.swift
 
 ### `xctidyVersion`

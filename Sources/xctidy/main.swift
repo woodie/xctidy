@@ -67,3 +67,10 @@ while let line = readLine(strippingNewline: true) {
     engine.feedLine(line)
 }
 print(engine.finish(), terminator: "")
+
+// Mirrors gorderly's `main.go` (`if failed > 0 { return 1 }`): reflect the
+// underlying run's real outcome in our own exit code, so a caller that pipes
+// straight into us (rather than using `set -o pipefail`) still sees failure.
+// Before this, xctidy always exited 0 here regardless of engine.failures --
+// see docs/COMMENTS.md for the full history of why that was unsafe.
+exit(engine.failures.isEmpty ? 0 : 1)

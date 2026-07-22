@@ -1,19 +1,18 @@
 ## Fix
 
-CI (`make lint` under SwiftLint's `--strict`) went red twice in a row after
-v0.3.0's `-fv` code landed, on two unrelated rule violations in
-`Engine.swift`:
+`xctidy` always exited 0 regardless of whether any rendered test case
+failed -- the only non-zero exits were flag-parsing errors. That meant a
+plain `xcodebuild test | xctidy Tests` (without `set -o pipefail`)
+reported success even when real tests failed, since the pipeline's exit
+status defaulted to the last command's. `xctidy` now exits 1 if
+`engine.failures` isn't empty, mirroring gorderly's `main.go`.
 
-- Two lines in `labelForPassed`'s `.vitest` case and `emitVitestFooter`
-  exceeded the 120-character `line_length` warning threshold. Harmless
-  under plain `swiftlint lint`, but `--strict` escalates warnings to
-  build-failing errors. Wrapped both onto multiple lines --
-  `Tests/.swiftlint.yml` already disables `line_length` for spec
-  fixtures, so this only ever affected real source under `Sources/`.
-- `vitestDurationParts`'s local `ms` variable violated `identifier_name`'s
-  minimum length. `.swiftlint.yml` only excludes single-letter names for
-  specific pre-reviewed cases (loop counters, regex-match locals); `ms`
-  wasn't one of them. Renamed to `milliseconds` at all three use sites.
+`set -o pipefail` is still worth keeping in CI: this only covers failures
+xctidy actually rendered, not an upstream build failure that happens
+before any test case runs.
 
-No behavior change either fix -- both are pure formatting/naming, verified
-against `EngineSpec.swift`'s existing `-fv` coverage.
+## Also
+
+`make test` now builds a debug `xctidy` binary and pipes `swift test`
+through it, so the suite dogfoods xctidy's own rendering on every local
+run -- matching how `gorderly`'s `test` target self-hosts on the Go side.
