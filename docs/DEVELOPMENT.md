@@ -148,6 +148,9 @@ Tests/
 docs/
   HOW_IT_WORKS.md       the engine's internals, output styles, limitations
   DEVELOPMENT.md        this file
+  FRAMEWORK.md          how we write Quick/Nimble specs across this repo,
+                        zouk, and next-caltrain-swift
+  releases/<tag>.md     hand-written release notes, one file per tag
 test.sh                 wraps the xcodebuild -only-testing: dance above so
                         you can run one spec file without typing it out
 ```
@@ -211,15 +214,25 @@ Tags are `vMAJOR.MINOR.PATCH`, following semver:
 
 ### Cutting a release
 
+Write `docs/releases/vX.Y.Z.md` and commit it -- a short "Highlights"/
+"Fix" list of what's new/fixed since the last tag is enough; this isn't a
+project that needs a formal changelog yet. Do this *before* tagging, not
+after: it needs to exist at the tagged commit, not just in a later one.
+See the existing files in `docs/releases/` for the shape.
+
 ```bash
 git tag vX.Y.Z
 git push origin vX.Y.Z
+gh release create vX.Y.Z --notes-file docs/releases/vX.Y.Z.md --title vX.Y.Z
 ```
 
-then draft a GitHub release from that tag (Releases -> Draft a new release
--> pick the tag). Release notes can stay short -- a "Highlights" list of
-what's new/fixed since the last tag is enough; this isn't a project that
-needs a formal changelog yet.
+(`gh release create` needs to be run explicitly -- pushing the tag alone
+only gives you the tag page GitHub renders automatically from the
+annotated tag message, not a real Release with the fuller notes body.
+`v0.3.1` and `v0.4.0` were tagged without this step and only ever show
+their tag message; if you want a fuller Release for either, `gh release
+create v0.3.1 --notes-file docs/releases/v0.3.1.md --title v0.3.1`
+against the existing tag works retroactively.)
 
 ## Contributing
 
