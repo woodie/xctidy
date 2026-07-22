@@ -341,7 +341,7 @@ literals, resolves it correctly, which is the actual point of this demo.
 ### `EngineSpec` (class)
 No comment kept in source; the one-QuickSpec-class-per-file convention is
 already fully documented in `docs/DEVELOPMENT.md`'s "Test" section and
-the README's "Writing specs" section, so restating it here in every spec
+the README's "Writing tests" section, so restating it here in every spec
 file was pure duplication.
 
 History: one `QuickSpec` class per file, one top-level `describe` per

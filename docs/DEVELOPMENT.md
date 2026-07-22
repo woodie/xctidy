@@ -98,7 +98,7 @@ package.
 This is also why every spec file here sticks to **one `QuickSpec` class,
 one top-level `describe`** -- the file's class name is all you need to
 isolate it with `-only-testing:`, no hunting through the file for what to
-focus. See the README's [Writing specs](../README.md#writing-specs)
+focus. See the README's [Writing tests](../README.md#writing-tests)
 section for the full convention, and
 `Tests/XctidyKitTests/SplitPathSpec.swift` for as plain an example as it
 gets.
@@ -139,7 +139,7 @@ test.sh                 wraps the xcodebuild -only-testing: dance above so
 ```
 
 Each file above is one `QuickSpec` class with exactly one top-level
-`describe`, matching the file's name and subject -- see "Writing specs" in
+`describe`, matching the file's name and subject -- see "Writing tests" in
 the README for why that convention matters if you're adding a new spec.
 
 `XctidyKit` is a separate target from the `xctidy` executable specifically
