@@ -93,6 +93,13 @@ Each `context` only has to state what's different about it (`numerator`/
 work -- a `justBeforeEach` awaits the call under test, sitting above
 several `context`s that each configure a different fake-server response.
 
+Direct-assign into a shared `var` declared next to `justBeforeEach` (as
+above) is the default for the common "one action, one result" case -- the
+eager `subject!` shape RSpec itself prefers. Reserve a closure-`subject`
+(see `gorderly`'s and `kotidy`'s own `docs/FRAMEWORK.md` for that pattern)
+for the narrower case where an `it` needs to invoke the action more than
+once, or with a locally-tweaked argument.
+
 ### `afterEach` for cleanup
 
 Anything a `beforeEach` creates outside the process (a temp directory, a
