@@ -113,6 +113,33 @@ afterEach { try? FileManager.default.removeItem(at: tempDirectory) }
 See also the stubbing example below, where `afterEach` resets a global
 override rather than a filesystem path.
 
+### Skipping and focusing tests
+
+Quick supports prefixing `describe`/`context`/`it` with `x` to disable (still
+listed in output, never run) or `f` to focus (skip everything except focused
+tests):
+
+```swift
+xdescribe("still needs a real fixture") {
+    // ...none of the code in this closure will run.
+}
+
+it("returns the cached value") { /* ... */ }
+xit("handles the timeout case") {
+    // ...this one test is skipped; siblings still run.
+}
+
+fdescribe("the bug we're chasing right now") {
+    // ...only this group (and other focused tests) run; everything else is skipped.
+}
+```
+
+Focus doesn't reliably reach into a test nested under an unfocused parent --
+Quick only knows about a test's `f` prefix once its parent group has actually
+run and registered it, so put `f` on the level you actually want to isolate,
+not a leaf buried under a plain `describe`. See `gorderly`'s and `kotidy`'s own
+`docs/FRAMEWORK.md` for the Go/Kotlin equivalents.
+
 ## Mocking and stubbing
 
 ### Protocol-based fakes
