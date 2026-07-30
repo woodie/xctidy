@@ -216,8 +216,13 @@ afterEach { Clock.debugOverrideNow = nil }
 ```
 
 so a later spec file never inherits a stale override. `next-caltrain-swift`'s
-`GoodTimes.debugOverrideMinutes`/`debugOverrideDotw` (see
-`Tests/TripViewModelSpec.swift`) is the real version of this same idea.
+`GoodTimes.dotwSeed`/`minutesSeed` (see `Tests/TripViewModelSpec.swift`) is
+the real version of this same idea -- kept as a global specifically because
+`TripViewModel` constructs `GoodTimes()` internally with no seam to inject a
+value directly. Where the caller constructs the object itself instead (see
+`Tests/GoodTimesSpec.swift`), prefer a factory that takes the value as a
+parameter (`GoodTimes.seeded(dotw:mins:)`) over a global -- nothing to reset,
+no ordering hazard between setting the override and constructing the object.
 
 ### Data builders for realistic fixtures
 
