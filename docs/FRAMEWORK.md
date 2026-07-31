@@ -1,22 +1,20 @@
 # Writing tests with Quick and Nimble
 
-How we structure specs across the Swift side of these projects (`xctidy`
-itself, [`zouk`](https://github.com/woodie/zouk), and
-[`next-caltrain-swift`](https://github.com/woodie/next-caltrain-swift)) --
-context/lifecycle conventions and mocking/stubbing patterns. Examples
-below use a generic `Calculator`/`WeatherClient` rather than any one
-project's real domain types, so the pattern reads the same regardless of
-which of these apps you're actually working in; each section points at
-the real file to read for the fuller version. For file-organization
-conventions specific to `xctidy` (one `describe` per file, `swift test
---filter`'s Quick limitations), see the README's
+How we structure Swift specs -- context/lifecycle conventions and
+mocking/stubbing patterns. Examples below use a generic `Calculator`/
+`WeatherClient` rather than any one project's real domain types, so the
+pattern reads the same regardless of what you're actually testing; each
+section points at the underlying mechanism rather than a specific file.
+For file-organization conventions specific to `xctidy` (one `describe` per
+file, `swift test --filter`'s Quick limitations), see the README's
 [Writing tests](../README.md#writing-tests) section instead -- this doc
 is about what goes *inside* a spec, not how specs are laid out on disk.
 
-All three projects use [Quick](https://github.com/Quick/Quick) for
-structure (`describe`/`context`/`it`, `beforeEach`/`afterEach`) and
-[Nimble](https://github.com/Quick/Nimble) for matchers (`expect(x).to(equal(y))`).
-The Go side of this pairing ([`gorderly`](https://github.com/woodie/gorderly),
+This uses [Quick](https://github.com/Quick/Quick) for structure
+(`describe`/`context`/`it`, `beforeEach`/`afterEach`) and
+[Nimble](https://github.com/Quick/Nimble) for matchers
+(`expect(x).to(equal(y))`). The Go side of this pairing
+([`gorderly`](https://github.com/woodie/gorderly),
 [`expect`](https://github.com/woodie/expect)) follows the same shape with
 different tools -- see `gorderly`'s own
 [docs/FRAMEWORK.md](https://github.com/woodie/gorderly/blob/main/docs/FRAMEWORK.md)
@@ -54,9 +52,7 @@ describe("Calculator") {
 
 `calculator` is built once per `it` at the top of the file, and every
 nested `describe`/`context` below can read it without redeclaring or
-re-threading it through arguments. See `next-caltrain-swift`'s
-`Tests/CaltrainServiceSpec.swift` for this exact shape used against a
-real routing algorithm, with a `service` built the same way at the top.
+re-threading it through arguments.
 
 ### `justBeforeEach`: separate "what varies" from "the action under test"
 
@@ -88,10 +84,10 @@ describe("#divide(_:by:)") {
 ```
 
 Each `context` only has to state what's different about it (`numerator`/
-`denominator`); the actual call under test is written once. `zouk`'s
-`Tests/ZoukKitTests/ScanClientSpec.swift` uses the same split for async
-work -- a `justBeforeEach` awaits the call under test, sitting above
-several `context`s that each configure a different fake-server response.
+`denominator`); the actual call under test is written once. The same
+split works for async work -- a `justBeforeEach` awaits the call under
+test, sitting above several `context`s that each configure a different
+fake-server response.
 
 Direct-assign into a shared `var` declared next to `justBeforeEach` (as
 above) is the default for the common "one action, one result" case -- the
@@ -188,10 +184,7 @@ context("when the server responds with a non-2xx status") {
 
 The fake conforms to the real protocol, so the type signature under test
 never changes between production and test code -- only which concrete
-type gets passed in. This mirrors `zouk`'s real
-`Tests/ZoukKitTests/FakeHTTPClient.swift`/`ScanClientSpec.swift` almost
-exactly; see those files for the fuller version, including download and
-delete handlers.
+type gets passed in.
 
 ### Stubbing with a debug override (no protocol needed)
 
@@ -215,14 +208,13 @@ that uses it resets it in `afterEach`:
 afterEach { Clock.debugOverrideNow = nil }
 ```
 
-so a later spec file never inherits a stale override. `next-caltrain-swift`'s
-`GoodTimes.dotwSeed`/`minutesSeed` (see `Tests/TripViewModelSpec.swift`) is
-the real version of this same idea -- kept as a global specifically because
-`TripViewModel` constructs `GoodTimes()` internally with no seam to inject a
-value directly. Where the caller constructs the object itself instead (see
-`Tests/GoodTimesSpec.swift`), prefer a factory that takes the value as a
-parameter (`GoodTimes.seeded(dotw:mins:)`) over a global -- nothing to reset,
-no ordering hazard between setting the override and constructing the object.
+so a later spec file never inherits a stale override. This is the right
+shape specifically when the code under test constructs its dependency
+internally, with no seam to inject a value directly. Where the caller
+constructs the object itself instead, prefer a factory that takes the
+value as a parameter (`Clock.seeded(now:)`) over a global -- nothing to
+reset, no ordering hazard between setting the override and constructing
+the object.
 
 ### Data builders for realistic fixtures
 
@@ -237,10 +229,10 @@ let order = OrderFixtures.order {
 }
 ```
 
-`next-caltrain-swift`'s `Tests/SpecFixtures.swift` is the real version of
-this idea -- a builder (`SpecFixtures.schedule { ... }`) for constructing
-a realistic train schedule without every spec hand-rolling the full
-station/time-table structure.
+A builder like `Fixtures.schedule { ... }` gives every spec a realistic
+default (a full station/time-table structure, say) without hand-rolling
+it inline, letting each spec override only the one or two fields its
+scenario actually cares about.
 
 ### Regression tests double as documentation
 
@@ -256,7 +248,7 @@ context("when a cached file's size no longer matches what's expected") {
 
 Anyone reading the spec later knows immediately this isn't a hypothetical
 edge case -- removing it silently would reintroduce a real, previously-
-shipped bug. See `zouk`'s `ScanClientSpec.swift` for a real one of these.
+shipped bug.
 
 ## `xctidy`'s own tests
 

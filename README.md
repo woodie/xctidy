@@ -8,7 +8,7 @@
 ![Example Screenshot](docs/example.png)
 
 
-**`xctidy` adds nested describe/context/it tree support to `xcodebuild`.**
+**Adds nested describe/context/it tree support to `xcodebuild`.**
 
 An alternative to xcbeautify and xcpretty written in Swift.
 
@@ -104,14 +104,11 @@ Vitest's own footer shape instead.
 | -fs | Mocha's spec format | Green `✔` + gray name, red `✗ name (FAILED - N)` |
 | -fv | Vitest's own tree | Green `✓ name`, two-toned green `2ms`, red `× name`, dim gray `↓ name` |
 
-`-fv` is [`gorderly`](https://github.com/woodie/gorderly)'s `-fv` counterpart
-for the XCTest side -- same glyphs, same millisecond conversion, same
-`Tests`/`Duration` footer shape. It currently omits Vitest's `Test Files`
-line: XCTest's own Test Suite nesting (a per-class suite wrapped in an "All
-tests"/"Selected tests" aggregate suite) hasn't been verified against real
-`xcodebuild` output, so a suite-level pass/fail count risks over-counting
-the wrapper suites as if they were their own files. `gorderly`'s equivalent
-(one line per Go package) had no such ambiguity.
+`-fv` currently omits Vitest's `Test Files` line: XCTest's own Test Suite
+nesting (a per-class suite wrapped in an "All tests"/"Selected tests"
+aggregate suite) hasn't been verified against real `xcodebuild` output, so
+a suite-level pass/fail count risks over-counting the wrapper suites as if
+they were their own files.
 
 The screenshot above is `-fd`. Full samples of all three xcbeautify-style
 styles: [docs/HOW_IT_WORKS.md](docs/HOW_IT_WORKS.md#output-styles).
@@ -132,9 +129,7 @@ doesn't work with Quick and what to use instead).
 
 For how we structure what's *inside* a spec -- nesting context so it's
 available to sub-tests, mocking and stubbing -- see
-[docs/FRAMEWORK.md](docs/FRAMEWORK.md), shared with
-[`zouk`](https://github.com/woodie/zouk) and
-[`next-caltrain-swift`](https://github.com/woodie/next-caltrain-swift).
+[docs/FRAMEWORK.md](docs/FRAMEWORK.md).
 
 ## Development
 
