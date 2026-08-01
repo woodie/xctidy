@@ -7,14 +7,10 @@
 
 ![Example Screenshot](docs/example.png)
 
-**Adds nested describe/context/it tree support to `xcodebuild`, in RSpec,
-Mocha, or Vitest's own output conventions.**
-
-`xctidy` parses `xcodebuild test`/`swift test` output directly -- the same
-textual protocol xcpretty and xcbeautify both regex-match -- and re-renders
-it as a nested tree. Written in Swift and compiled to a static binary, it's
-a drop-in `xcodebuild_formatter` for fastlane's `scan`/`gym`/`snapshot`, and
-an alternative to xcbeautify and xcpretty outside of fastlane too.
+RSpec/Mocha/Vitest-style output for Swift that works with `xcodebuild
+test`/`swift test` by parsing their raw output directly. A drop-in
+alternative to xcbeautify and xcpretty, including as fastlane's
+`xcodebuild_formatter`.
 
 ## Installation
 
