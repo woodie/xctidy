@@ -29,34 +29,23 @@ make install
 xcodebuild test [flags] | xctidy Tests
 ```
 
-`xctidy` itself exits 1 if any test case it rendered failed, so a plain
-`... | xctidy Tests` already reports a real test failure correctly. It
-can't know about a failure further upstream, though -- if `xcodebuild`/
-`swift test` itself fails before any test case ever runs (a build error,
-a crashed test host), that never produces a "Test Case ... failed" line
-for `xctidy` to see. For that case, also propagate the upstream tool's
-own exit status (e.g. on CI):
+On CI, also propagate the upstream exit status, since a build failure
+before any test runs never reaches `xctidy` to reflect in its own:
 
 ```bash
 set -o pipefail && xcodebuild test [flags] | xctidy Tests
 ```
 
+For `swift test`, redirect stderr -- XCTest's status lines land there, not
+stdout:
+
 ```bash
 swift test 2>&1 | xctidy Tests
 ```
 
-Note the `2>&1` here -- unlike `xcodebuild`, which already merges the test
-runner's output into its own stdout, `swift test` execs the XCTest runner
-directly and inherits its file descriptors unmerged. On macOS, XCTest's
-`Test Suite`/`Test Case` status lines go to stderr, not stdout, so without
-`2>&1` `xctidy` only ever sees the build phase's own output and nothing to
-render.
-
-The positional argument (`Tests` above) is the path to your specs
-directory -- it's how `xctidy` cross-references `describe`/`context`/`it`
-string literals to disambiguate comma-flattened names. Omit it and `xctidy`
-falls back to a heuristic that handles most cases, but a known spec
-directory is more reliable.
+The positional argument (`Tests` above) is your specs directory, used to
+disambiguate comma-flattened `describe`/`context`/`it` names. Omit it and
+`xctidy` falls back to a heuristic.
 
 ### fastlane
 
@@ -129,7 +118,11 @@ available to sub-tests, mocking and stubbing -- see
 
 ### Limitations
 
-See [docs/HOW_IT_WORKS.md](docs/HOW_IT_WORKS.md#known-limitations) for how
+`xctidy`'s own exit code only reflects test cases it actually rendered --
+a build failure before any test runs never reaches it, so `set -o
+pipefail` is what carries that upstream failure through on CI (see
+Usage above). See
+[docs/HOW_IT_WORKS.md](docs/HOW_IT_WORKS.md#known-limitations) for how
 the comma disambiguation and failure folding actually work, and for known
 limitations (no Linux support, no JUnit/CI-UI renderers, Quick/Nimble-only
 scope).
