@@ -10,7 +10,8 @@
 RSpec/Mocha/Vitest-style output for Swift that works with `xcodebuild
 test`/`swift test` by parsing their raw output directly. A drop-in
 alternative to xcbeautify and xcpretty, including as fastlane's
-`xcodebuild_formatter`.
+`xcodebuild_formatter`. Skim a thousand-line Xcode test log in seconds
+instead of scrolling past it.
 
 ## Installation
 
