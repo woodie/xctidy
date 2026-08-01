@@ -48,7 +48,7 @@ private func writeTempSpecsDir(_ files: [String: String]) -> String {
 final class LoadKnownAtomsSpec: QuickSpec {
     override static func spec() {
         describe("loadKnownAtoms") {
-            it("scans describe/context/it literals out of the given directory") {
+            it("scans describe/context/it literals from directory") {
                 let dir = writeTempSpecsDir([
                     "GoodTimesSpec.swift": goodTimesSwift,
                     "CaltrainServiceSpec.swift": caltrainServiceSwift,
@@ -75,7 +75,7 @@ final class LoadKnownAtomsSpec: QuickSpec {
                 expect(atoms).to(beEmpty())
             }
 
-            it("recurses into per-target subdirectories like Tests/<ModuleName>Tests/") {
+            it("recurses into per-target subdirectories") {
                 // Regression test for the non-recursive-glob bug: SwiftPM nests specs one level under Tests/, e.g. Tests/FooKitTests/; see docs/COMMENTS.md (loadKnownAtoms).
                 let dir = writeTempSpecsDir([:])
                 let subdir = (dir as NSString).appendingPathComponent("FooKitTests")

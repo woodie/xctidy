@@ -45,7 +45,7 @@ final class SplitPathSpec: QuickSpec {
                     expect(path).to(equal(["foo", "bar (baz, qux)", "last"]))
                 }
 
-                it("falls back to the heuristic when the decomposition is ambiguous") {
+                it("falls back to the heuristic when ambiguous") {
                     // Deliberately ambiguous: two valid decompositions exist for this atom set, so splitPath must fall back to the heuristic.
                     let atoms: Set<String> = ["a", "b, c", "a, b", "c"]
                     let path = splitPath("a, b, c", atoms: atoms)
