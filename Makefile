@@ -47,9 +47,11 @@ build: version
 	$(SWIFT) build $(SWIFT_BUILD_FLAGS)
 
 .PHONY: test
+# -fs (Mocha's spec format) so this matches kotidy's `make dogfood` output --
+# all four repos in the family screenshot the same style for their READMEs.
 test:
 	$(SWIFT) build --product $(PRODUCT_NAME)
-	set -o pipefail; $(SWIFT) test 2>&1 | "$$($(SWIFT) build --show-bin-path)/$(PRODUCT_NAME)" Tests/XctidyKitTests
+	set -o pipefail; $(SWIFT) test 2>&1 | "$$($(SWIFT) build --show-bin-path)/$(PRODUCT_NAME)" -fs Tests/XctidyKitTests
 
 .PHONY: lint
 lint:

@@ -7,17 +7,14 @@
 
 ![Example Screenshot](docs/example.png)
 
+**Adds nested describe/context/it tree support to `xcodebuild`, in RSpec,
+Mocha, or Vitest's own output conventions.**
 
-**Adds nested describe/context/it tree support to `xcodebuild`.**
-
-An alternative to xcbeautify and xcpretty written in Swift.
-
-## Features
-
-- Test output is more concise and readable
-- Familiar output conventions from RSpec and Mocha
-- Drop-in `xcodebuild_formatter` for fastlane's `scan`/`gym`/`snapshot`
-- Written in Swift and compiles to a static binary
+`xctidy` parses `xcodebuild test`/`swift test` output directly -- the same
+textual protocol xcpretty and xcbeautify both regex-match -- and re-renders
+it as a nested tree. Written in Swift and compiled to a static binary, it's
+a drop-in `xcodebuild_formatter` for fastlane's `scan`/`gym`/`snapshot`, and
+an alternative to xcbeautify and xcpretty outside of fastlane too.
 
 ## Installation
 
@@ -110,10 +107,12 @@ aggregate suite) hasn't been verified against real `xcodebuild` output, so
 a suite-level pass/fail count risks over-counting the wrapper suites as if
 they were their own files.
 
-The screenshot above is `-fd`. Full samples of all three xcbeautify-style
+The screenshot above is `-fs`. Full samples of all three xcbeautify-style
 styles: [docs/HOW_IT_WORKS.md](docs/HOW_IT_WORKS.md#output-styles).
 
-## Writing tests
+## Things to know
+
+### Writing tests
 
 `xctidy` renders whatever nesting your test framework produces, so the
 nesting it shows is only as good as how you write your specs. If you're
@@ -131,18 +130,23 @@ For how we structure what's *inside* a spec -- nesting context so it's
 available to sub-tests, mocking and stubbing -- see
 [docs/FRAMEWORK.md](docs/FRAMEWORK.md).
 
+### Limitations
+
+See [docs/HOW_IT_WORKS.md](docs/HOW_IT_WORKS.md#known-limitations) for how
+the comma disambiguation and failure folding actually work, and for known
+limitations (no Linux support, no JUnit/CI-UI renderers, Quick/Nimble-only
+scope).
+
 ## Development
 
 ```
 make build    # swift build --configuration release
 make install  # builds, then copies the binary to $(PREFIX)/bin (default /usr/local)
-make test     # verbose, dogfoods xctidy on its own suite (swift test | xctidy)
+make test     # verbose, dogfoods xctidy on its own suite in -fs style (swift test | xctidy -fs)
 make lint     # swiftlint lint --strict
 make check    # terse: silent on success, full log on failure
 ```
 
 See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for project layout, how to
 add a render style, the release process, and the rest of the Makefile
-(`uninstall`, `clean`, `xcode`). See
-[docs/HOW_IT_WORKS.md](docs/HOW_IT_WORKS.md) for how the comma
-disambiguation and failure folding actually work, and for known limitations.
+(`uninstall`, `clean`, `xcode`).

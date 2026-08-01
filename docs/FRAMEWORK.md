@@ -20,6 +20,14 @@ different tools -- see `gorderly`'s own
 [docs/FRAMEWORK.md](https://github.com/woodie/gorderly/blob/main/docs/FRAMEWORK.md)
 if you're working on that side instead.
 
+## Keep descriptions concise
+
+`describe`/`context`/`it` strings render as literal lines in the tree --
+treat them like any other line of code meant to be read at a glance. State
+only what's true, in the fewest words that still read like a sentence;
+leave out rationale, comparisons to other tools, or anything that belongs
+in a doc or comment instead.
+
 ## Nesting context so it's available to every sub-test
 
 `beforeEach` closures run fresh before each `it`, from the outermost
