@@ -41,10 +41,11 @@ extension NSTextCheckingResult {
 enum AnsiColor: String {
     case red = "31"
     case green = "32"
-    case brightGreen = "92"
     case yellow = "33"
     case cyan = "36"
     case gray = "90"
+    /// vitestUnit: real Vitest's own unit-suffix color (#b9e4b4); no ANSI-16 entry matches it.
+    case vitestUnit = "38;2;185;228;180"
 }
 
 /// Controls per-leaf label rendering: `.classic` (default, glyph + time), `.doc` (RSpec `-fd` clone), `.spec` (Mocha/Jest clone), `.vitest` (Vitest's own tree clone, gorderly's `-fv` counterpart) -- the first three share one identical xcbeautify-style closing footer; `.vitest` closes with Vitest's own Tests/Duration shape instead. See docs/COMMENTS.md.
@@ -189,12 +190,12 @@ public final class Engine {
         case .spec:
             return colorize(.green, "✔") + " " + colorize(.gray, name)
         case .vitest:
-            // Name stays uncolored (not gray) and the duration is two-toned (plain green number, lighter brightGreen unit) -- matches a real `vitest run`, confirmed rather than assumed. See gorderly's render.go.
+            // Name stays uncolored (not gray) and the duration is two-toned (plain green number, pale vitestUnit unit) -- matches a real `vitest run`, confirmed rather than assumed. See gorderly's render.go.
             guard let parts = vitestDurationParts(time) else {
                 return "\(colorize(.green, "✓")) \(name)"
             }
             let number = colorize(.green, parts.number)
-            let unit = colorize(.brightGreen, parts.unit)
+            let unit = colorize(.vitestUnit, parts.unit)
             return "\(colorize(.green, "✓")) \(name) \(number)\(unit)"
         }
     }
