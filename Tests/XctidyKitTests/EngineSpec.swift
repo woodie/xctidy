@@ -270,7 +270,7 @@ final class EngineSpec: QuickSpec {
                     engine.feedLine("Test Case '-[Suite foo]' passed (0.002 seconds).")
                     let output = engine.finish()
                     expect(output).to(contain("\u{1B}[32m2\u{1B}[0m"))
-                    expect(output).to(contain("\u{1B}[92mms\u{1B}[0m"))
+                    expect(output).to(contain("\u{1B}[38;2;185;228;180mms\u{1B}[0m"))
                 }
 
                 it("ends with a Vitest-shaped Tests/Duration footer, not the xcbeautify one") {
