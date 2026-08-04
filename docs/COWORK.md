@@ -75,5 +75,5 @@ manual `rm`/`git rm` for the user to run.
 
 ## Current status
 
-`v0.4.0`, CI green (macOS/Swift 5.10). Output parity-audited against `gorderly` in
+`v0.4.1`, CI green (macOS/Swift 5.10). Output parity-audited against `gorderly` in
 both directions.
